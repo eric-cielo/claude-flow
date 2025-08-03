@@ -876,15 +876,7 @@ The swarm should be self-documenting - use memory_store to save all important in
       }
       console.log();
 
-      // Get strategy-specific guidance using already declared variables
-      const strategyGuidance = getStrategyGuidance(strategy, objective);
-      const modeGuidance = getModeGuidance(mode);
-      const agentRecommendations = getAgentRecommendations(strategy, maxAgents, objective);
-
-      const enableSparc =
-        flags.sparc !== false && (strategy === 'development' || strategy === 'auto');
-
-      const swarmPrompt = `You are orchestrating a Claude Flow Swarm with advanced MCP tool coordination.
+      // swarmPrompt is already built above, just continue with the original code
 
 🎯 OBJECTIVE: ${objective}
 
