@@ -72,8 +72,8 @@ USAGE:
   batch <action>           Batch operations
 
 🔍 GET HELP:
-  claude-flow --help                Show this help
-  claude-flow <command> --help      Detailed command help
+  npx claude-flow@alpha --help                Show this help
+  npx claude-flow@alpha <command> --help      Detailed command help
 
 🎯 RECOMMENDED FOR NEW USERS:
   npx claude-flow@alpha hive-mind wizard     # Start here! Interactive guided setup
