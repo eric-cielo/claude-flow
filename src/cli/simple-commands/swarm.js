@@ -156,6 +156,7 @@ EXAMPLES:
   claude-flow swarm "Develop user registration feature" --mode distributed
   claude-flow swarm "Optimize React app performance" --strategy optimization
   claude-flow swarm "Create microservice" --executor  # Use built-in executor
+  claude-flow swarm "Build API" --claude  # Open Claude Code desktop app
   claude-flow swarm "Build API endpoints" --output-format json  # Get JSON output
   claude-flow swarm "Research AI trends" --output-format json --output-file results.json
 
