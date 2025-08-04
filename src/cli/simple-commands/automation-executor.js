@@ -321,26 +321,26 @@ export class WorkflowExecutor {
    */
   handleClaudeStreamEvent(agent, event) {
     if (this.options.outputFormat === 'stream-json') {
-      // Create formatted JSON with summary
-      const formattedEvent = {
-        timestamp: new Date().toISOString(),
-        agent: {
-          id: agent.id,
-          name: agent.name,
-          type: agent.type
-        },
-        workflow: {
-          id: this.executionId,
-          phase: this.currentPhase || 'unknown'
-        },
-        event: {
-          type: event.type,
-          summary: this.getEventSummary(event),
-          ...event
-        }
+      // Create concise formatted JSON with summary
+      const summary = this.getEventSummary(event);
+      const icon = this.getEventIcon(event.type);
+      
+      // Simplified output for better readability
+      const output = {
+        t: new Date().toISOString().split('T')[1].split('.')[0], // HH:MM:SS
+        agent: `${this.getAgentIcon(agent.id)} ${agent.name}`,
+        phase: this.currentPhase,
+        event: `${icon} ${summary}`
       };
       
-      console.log(JSON.stringify(formattedEvent, null, 2));
+      // Add relevant details based on event type
+      if (event.type === 'tool_use' && event.name) {
+        output.tool = event.name;
+      } else if (event.type === 'error' && event.error) {
+        output.error = event.error;
+      }
+      
+      console.log(JSON.stringify(output));
     } else {
       // Format output for text mode
       switch (event.type) {
