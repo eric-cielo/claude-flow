@@ -1,555 +1,238 @@
 {
-  "id": "mle-star-workflow",
-  "name": "MLE-STAR: Machine Learning Engineering with STAR Methodology",
-  "description": "Flagship workflow implementing the MLE-STAR methodology with web search, ablation-driven outer loop, focused refinement inner loop, ensemble creation, and robustness validation",
-  "version": "1.0.0",
-  "category": "machine-learning",
-  "tags": ["mle-star", "machine-learning", "research", "ensemble", "ablation", "robustness"],
-  "metadata": {
-    "author": "Claude Flow Team",
-    "created": "2025-08-04",
-    "complexity": "advanced",
-    "estimatedDuration": "4-6 hours",
-    "prerequisites": ["python", "git", "research-skills"],
-    "nonInteractive": true
-  },
-  "configuration": {
-    "swarm": {
-      "topology": "hierarchical",
-      "maxAgents": 8,
-      "strategy": "adaptive",
-      "autoScale": true
-    },
-    "coordination": {
-      "memoryNamespace": "mle-star",
-      "checkpointInterval": 300,
-      "retryAttempts": 3,
-      "timeoutMinutes": 60
-    },
-    "hooks": {
-      "preTask": ["validation", "resource-check"],
-      "postTask": ["metrics-collection", "artifact-storage"],
-      "onError": ["rollback", "notify"]
-    }
+  "name": "MLE-STAR Machine Learning Engineering",
+  "description": "Automated ML pipeline development using Search and Targeted Refinement methodology",
+  "version": "1.0",
+  "variables": {
+    "dataset": "${DATASET_PATH}",
+    "target": "${TARGET_COLUMN}",
+    "output_dir": "./mle-star-output",
+    "search_iterations": 3,
+    "refinement_iterations": 5,
+    "ensemble_size": 5
   },
   "agents": [
     {
-      "id": "research-coordinator",
+      "id": "search-coordinator",
+      "type": "coordinator",
+      "name": "Web Search Coordinator",
+      "capabilities": ["web-search", "knowledge-synthesis"]
+    },
+    {
+      "id": "ml-researcher",
       "type": "researcher",
-      "role": "primary",
-      "capabilities": ["web-search", "literature-review", "trend-analysis"],
-      "resources": {
-        "memory": "high",
-        "priority": "critical"
-      }
+      "name": "ML Model Researcher",
+      "capabilities": ["model-search", "paper-analysis", "kaggle-solutions"]
     },
     {
-      "id": "ml-architect",
-      "type": "system-architect",
-      "role": "specialist",
-      "capabilities": ["model-design", "architecture-planning", "optimization"],
-      "resources": {
-        "memory": "high",
-        "priority": "high"
-      }
+      "id": "data-analyst",
+      "type": "analyst",
+      "name": "Data Analysis Expert",
+      "capabilities": ["eda", "feature-analysis", "data-quality"]
     },
     {
-      "id": "ablation-engineer",
-      "type": "code-analyzer",
-      "role": "specialist",
-      "capabilities": ["ablation-studies", "feature-analysis", "statistical-validation"],
-      "resources": {
-        "memory": "medium",
-        "priority": "high"
-      }
+      "id": "ml-engineer-1",
+      "type": "implementer",
+      "name": "ML Engineer Alpha",
+      "capabilities": ["model-implementation", "feature-engineering", "optimization"]
     },
     {
-      "id": "ensemble-builder",
-      "type": "coder",
-      "role": "specialist",
-      "capabilities": ["ensemble-methods", "model-combination", "stacking"],
-      "resources": {
-        "memory": "medium",
-        "priority": "high"
-      }
+      "id": "ml-engineer-2",
+      "type": "implementer",
+      "name": "ML Engineer Beta",
+      "capabilities": ["model-implementation", "ensemble-methods", "hyperparameter-tuning"]
     },
     {
-      "id": "robustness-validator",
+      "id": "ablation-analyst",
+      "type": "analyst",
+      "name": "Ablation Study Analyst",
+      "capabilities": ["performance-analysis", "component-testing", "impact-measurement"]
+    },
+    {
+      "id": "ensemble-architect",
+      "type": "coordinator",
+      "name": "Ensemble Strategy Architect",
+      "capabilities": ["ensemble-design", "model-combination", "performance-optimization"]
+    },
+    {
+      "id": "validator",
       "type": "tester",
-      "role": "specialist",
-      "capabilities": ["robustness-testing", "adversarial-validation", "stress-testing"],
-      "resources": {
-        "memory": "medium",
-        "priority": "medium"
+      "name": "Robustness Validator",
+      "capabilities": ["data-leakage-detection", "validation", "debugging"]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "web-search",
+      "name": "Web Search for ML Solutions",
+      "type": "research",
+      "description": "Search for state-of-the-art models and successful approaches",
+      "assignTo": ["search-coordinator", "ml-researcher"],
+      "parallel": true,
+      "claudePrompt": "Search for effective ML models and approaches for ${target} prediction using ${dataset}. Focus on: 1) State-of-the-art models, 2) Kaggle competition solutions, 3) Research papers with implementations, 4) Pre-trained models. Provide a comprehensive list of approaches with their key characteristics.",
+      "input": {
+        "dataset": "${dataset}",
+        "target": "${target}",
+        "iterations": "${search_iterations}"
+      },
+      "output": {
+        "models_found": "array",
+        "approaches": "array",
+        "initial_pipeline": "object"
       }
     },
     {
-      "id": "performance-optimizer",
-      "type": "performance-benchmarker",
-      "role": "specialist",
-      "capabilities": ["performance-tuning", "benchmark-analysis", "scalability-testing"],
-      "resources": {
-        "memory": "medium",
-        "priority": "medium"
+      "id": "data-analysis",
+      "name": "Comprehensive Data Analysis",
+      "type": "analysis",
+      "description": "Analyze dataset characteristics and requirements",
+      "assignTo": "data-analyst",
+      "depends": [],
+      "claudePrompt": "Perform comprehensive EDA on ${dataset} for predicting ${target}. Analyze: 1) Data types and distributions, 2) Missing values and outliers, 3) Feature correlations, 4) Target variable characteristics, 5) Potential feature engineering opportunities. Provide actionable insights for ML pipeline design.",
+      "input": {
+        "dataset": "${dataset}",
+        "target": "${target}"
+      },
+      "output": {
+        "data_insights": "object",
+        "feature_recommendations": "array",
+        "preprocessing_requirements": "array"
       }
     },
     {
-      "id": "documentation-specialist",
-      "type": "api-docs",
-      "role": "support",
-      "capabilities": ["technical-writing", "documentation", "visualization"],
-      "resources": {
-        "memory": "low",
-        "priority": "low"
+      "id": "initial-pipeline",
+      "name": "Build Initial ML Pipeline",
+      "type": "implementation",
+      "description": "Create baseline pipeline using search results",
+      "assignTo": "ml-engineer-1",
+      "depends": ["web-search", "data-analysis"],
+      "claudePrompt": "Build an initial ML pipeline incorporating the best approaches from web search. Use insights from data analysis to guide preprocessing and feature engineering. Create a modular pipeline with clear components: 1) Data preprocessing, 2) Feature engineering, 3) Model architecture, 4) Training strategy, 5) Evaluation metrics.",
+      "input": {
+        "search_results": "${web-search.output}",
+        "data_insights": "${data-analysis.output}",
+        "dataset": "${dataset}",
+        "target": "${target}"
+      },
+      "output": {
+        "pipeline_code": "string",
+        "baseline_score": "number",
+        "components": "object"
       }
     },
     {
-      "id": "orchestrator",
-      "type": "task-orchestrator",
-      "role": "coordinator",
-      "capabilities": ["workflow-management", "task-coordination", "progress-tracking"],
-      "resources": {
-        "memory": "high",
-        "priority": "critical"
+      "id": "ablation-study",
+      "name": "Component Ablation Analysis",
+      "type": "analysis",
+      "description": "Identify critical pipeline components through ablation",
+      "assignTo": "ablation-analyst",
+      "depends": ["initial-pipeline"],
+      "iterative": true,
+      "maxIterations": "${refinement_iterations}",
+      "claudePrompt": "Conduct systematic ablation study on the ML pipeline. For each component (preprocessing, feature engineering, model, postprocessing): 1) Remove/disable the component, 2) Measure performance impact, 3) Identify the most critical component. Provide detailed analysis of which component has the highest impact on performance.",
+      "input": {
+        "pipeline": "${initial-pipeline.output.pipeline_code}",
+        "baseline_score": "${initial-pipeline.output.baseline_score}"
+      },
+      "output": {
+        "critical_component": "string",
+        "impact_scores": "object",
+        "ablation_results": "array"
+      }
+    },
+    {
+      "id": "targeted-refinement",
+      "name": "Focused Component Optimization",
+      "type": "optimization",
+      "description": "Deep refinement of identified critical component",
+      "assignTo": ["ml-engineer-1", "ml-engineer-2"],
+      "depends": ["ablation-study"],
+      "parallel": true,
+      "iterative": true,
+      "claudePrompt": "Focus on optimizing the ${ablation-study.output.critical_component} component. Generate 10+ variations: 1) Different implementation approaches, 2) Hyperparameter variations, 3) Alternative algorithms, 4) Novel techniques. Test each variation and track performance. Select the best performing variation.",
+      "input": {
+        "critical_component": "${ablation-study.output.critical_component}",
+        "current_pipeline": "${initial-pipeline.output.pipeline_code}",
+        "target_score": "${initial-pipeline.output.baseline_score}"
+      },
+      "output": {
+        "best_variation": "object",
+        "improved_pipeline": "string",
+        "new_score": "number",
+        "all_variations": "array"
+      }
+    },
+    {
+      "id": "ensemble-creation",
+      "name": "Advanced Ensemble Strategy",
+      "type": "ensemble",
+      "description": "Create sophisticated ensemble from best models",
+      "assignTo": "ensemble-architect",
+      "depends": ["targeted-refinement"],
+      "claudePrompt": "Design an advanced ensemble strategy using the top ${ensemble_size} model variations. Consider: 1) Model diversity and complementarity, 2) Weighted voting vs stacking vs blending, 3) Cross-validation for weight optimization, 4) Out-of-fold predictions. Implement the ensemble and optimize for maximum performance.",
+      "input": {
+        "candidate_models": "${targeted-refinement.output.all_variations}",
+        "ensemble_size": "${ensemble_size}",
+        "validation_data": "${dataset}"
+      },
+      "output": {
+        "ensemble_strategy": "object",
+        "ensemble_code": "string",
+        "ensemble_score": "number",
+        "model_weights": "array"
+      }
+    },
+    {
+      "id": "robustness-validation",
+      "name": "Robustness and Quality Checks",
+      "type": "validation",
+      "description": "Comprehensive validation and debugging",
+      "assignTo": "validator",
+      "depends": ["ensemble-creation"],
+      "parallel": true,
+      "claudePrompt": "Perform comprehensive robustness validation: 1) Check for data leakage in all pipeline stages, 2) Verify train/test separation integrity, 3) Debug any execution errors, 4) Validate reproducibility, 5) Check resource usage and optimization opportunities. Fix any issues found and ensure production readiness.",
+      "input": {
+        "final_pipeline": "${ensemble-creation.output.ensemble_code}",
+        "dataset": "${dataset}",
+        "all_components": "${initial-pipeline.output.components}"
+      },
+      "output": {
+        "validation_report": "object",
+        "issues_found": "array",
+        "fixes_applied": "array",
+        "production_ready": "boolean"
+      }
+    },
+    {
+      "id": "deployment-package",
+      "name": "Create Deployment Package",
+      "type": "deployment",
+      "description": "Package final solution for deployment",
+      "assignTo": "ml-engineer-1",
+      "depends": ["robustness-validation"],
+      "claudePrompt": "Create a production-ready deployment package: 1) Clean and optimize code, 2) Create requirements.txt, 3) Add comprehensive documentation, 4) Include model serialization, 5) Create inference API, 6) Add monitoring hooks. Package everything in ${output_dir}.",
+      "input": {
+        "validated_pipeline": "${robustness-validation.output}",
+        "output_dir": "${output_dir}"
+      },
+      "output": {
+        "deployment_path": "string",
+        "api_endpoint": "string",
+        "documentation": "string",
+        "performance_metrics": "object"
       }
     }
   ],
-  "phases": [
-    {
-      "id": "phase1-search",
-      "name": "Web Search & Research Phase",
-      "description": "Comprehensive research using multiple search agents",
-      "parallelizable": true,
-      "dependencies": [],
-      "estimatedDuration": 45,
-      "steps": [
-        {
-          "id": "literature-search",
-          "name": "Literature Search",
-          "agent": "research-coordinator",
-          "action": "web-search",
-          "parameters": {
-            "queries": [
-              "state-of-the-art machine learning {domain} 2024",
-              "ensemble methods {domain} recent advances",
-              "ablation studies methodology {domain}",
-              "robustness evaluation machine learning {domain}"
-            ],
-            "sources": ["arxiv", "scholar", "github", "paperswithcode"],
-            "maxResults": 50,
-            "timeWindow": "2023-2024"
-          },
-          "outputs": ["research-papers", "trend-analysis", "sota-methods"]
-        },
-        {
-          "id": "architecture-research",
-          "name": "Architecture Research",
-          "agent": "ml-architect",
-          "action": "analyze-architectures",
-          "parameters": {
-            "focus": ["transformer-variants", "hybrid-models", "efficient-architectures"],
-            "metrics": ["accuracy", "efficiency", "scalability"],
-            "constraints": "{computational-budget}"
-          },
-          "outputs": ["architecture-candidates", "design-patterns", "trade-offs"]
-        },
-        {
-          "id": "baseline-identification",
-          "name": "Baseline Identification",
-          "agent": "research-coordinator",
-          "action": "identify-baselines",
-          "parameters": {
-            "criteria": ["popularity", "performance", "reproducibility"],
-            "count": 5
-          },
-          "outputs": ["baseline-models", "benchmark-datasets", "evaluation-metrics"]
-        }
-      ]
-    },
-    {
-      "id": "phase2-ablation-outer-loop",
-      "name": "Ablation-Driven Outer Loop",
-      "description": "Systematic ablation studies to identify key components",
-      "parallelizable": false,
-      "dependencies": ["phase1-search"],
-      "estimatedDuration": 90,
-      "iterations": {
-        "type": "adaptive",
-        "maxIterations": 5,
-        "convergenceCriteria": "improvement < 0.01"
-      },
-      "steps": [
-        {
-          "id": "component-identification",
-          "name": "Component Identification",
-          "agent": "ablation-engineer",
-          "action": "identify-components",
-          "parameters": {
-            "architectures": "{architecture-candidates}",
-            "granularity": ["layer-level", "module-level", "hyperparameter-level"]
-          },
-          "outputs": ["component-list", "dependency-graph", "ablation-matrix"]
-        },
-        {
-          "id": "ablation-design",
-          "name": "Ablation Study Design",
-          "agent": "ablation-engineer",
-          "action": "design-ablation",
-          "parameters": {
-            "components": "{component-list}",
-            "strategy": "factorial",
-            "controlVariables": ["random-seed", "data-split", "initialization"]
-          },
-          "outputs": ["experiment-plan", "control-conditions", "measurement-protocol"]
-        },
-        {
-          "id": "batch-experiments",
-          "name": "Batch Experiment Execution",
-          "agent": "ml-architect",
-          "action": "run-experiments",
-          "parameters": {
-            "plan": "{experiment-plan}",
-            "parallelization": "gpu-cluster",
-            "monitoring": ["loss-curves", "validation-metrics", "resource-usage"]
-          },
-          "outputs": ["experiment-results", "performance-metrics", "resource-profiles"]
-        },
-        {
-          "id": "component-ranking",
-          "name": "Component Importance Ranking",
-          "agent": "ablation-engineer",
-          "action": "rank-components",
-          "parameters": {
-            "results": "{experiment-results}",
-            "metrics": ["performance-impact", "statistical-significance", "interaction-effects"],
-            "method": "shapley-value"
-          },
-          "outputs": ["component-rankings", "interaction-analysis", "significance-tests"]
-        },
-        {
-          "id": "architecture-refinement",
-          "name": "Architecture Refinement",
-          "agent": "ml-architect",
-          "action": "refine-architecture",
-          "parameters": {
-            "rankings": "{component-rankings}",
-            "keepTopK": 0.7,
-            "optimizationTarget": "pareto-optimal"
-          },
-          "outputs": ["refined-architecture", "pruning-decisions", "optimization-rationale"]
-        }
-      ]
-    },
-    {
-      "id": "phase3-refinement-inner-loop",
-      "name": "Focused Refinement Inner Loop",
-      "description": "Intensive optimization of refined architecture",
-      "parallelizable": true,
-      "dependencies": ["phase2-ablation-outer-loop"],
-      "estimatedDuration": 120,
-      "iterations": {
-        "type": "fixed",
-        "count": 3,
-        "parallelization": "hyperparameter-search"
-      },
-      "steps": [
-        {
-          "id": "hyperparameter-optimization",
-          "name": "Hyperparameter Optimization",
-          "agent": "performance-optimizer",
-          "action": "optimize-hyperparameters",
-          "parameters": {
-            "architecture": "{refined-architecture}",
-            "method": "bayesian-optimization",
-            "budget": "1000-trials",
-            "objective": "multi-objective"
-          },
-          "outputs": ["optimal-hyperparameters", "optimization-history", "pareto-front"]
-        },
-        {
-          "id": "training-optimization",
-          "name": "Training Process Optimization",
-          "agent": "performance-optimizer",
-          "action": "optimize-training",
-          "parameters": {
-            "techniques": ["learning-rate-scheduling", "gradient-clipping", "regularization"],
-            "early-stopping": "validation-based",
-            "checkpointing": "best-model"
-          },
-          "outputs": ["training-recipe", "convergence-analysis", "best-checkpoints"]
-        },
-        {
-          "id": "data-augmentation",
-          "name": "Data Augmentation Strategy",
-          "agent": "ml-architect",
-          "action": "design-augmentation",
-          "parameters": {
-            "techniques": ["domain-specific", "learned-augmentation", "mixup-variants"],
-            "validation": "cross-validation",
-            "intensity": "adaptive"
-          },
-          "outputs": ["augmentation-pipeline", "validation-results", "performance-gains"]
-        },
-        {
-          "id": "model-distillation",
-          "name": "Knowledge Distillation",
-          "agent": "ensemble-builder",
-          "action": "apply-distillation",
-          "parameters": {
-            "teacher": "ensemble-model",
-            "student": "{refined-architecture}",
-            "temperature": "learnable",
-            "loss-weighting": "adaptive"
-          },
-          "outputs": ["distilled-model", "compression-ratio", "performance-retention"]
-        }
-      ]
-    },
-    {
-      "id": "phase4-ensemble-creation",
-      "name": "Ensemble Creation",
-      "description": "Build robust ensemble from refined models",
-      "parallelizable": true,
-      "dependencies": ["phase3-refinement-inner-loop"],
-      "estimatedDuration": 60,
-      "steps": [
-        {
-          "id": "model-diversity-analysis",
-          "name": "Model Diversity Analysis",
-          "agent": "ensemble-builder",
-          "action": "analyze-diversity",
-          "parameters": {
-            "models": "{refined-models}",
-            "metrics": ["prediction-diversity", "error-correlation", "feature-importance"],
-            "selection-strategy": "diversity-accuracy-tradeoff"
-          },
-          "outputs": ["diversity-matrix", "correlation-analysis", "selection-criteria"]
-        },
-        {
-          "id": "ensemble-methods",
-          "name": "Ensemble Method Selection",
-          "agent": "ensemble-builder",
-          "action": "select-ensemble-method",
-          "parameters": {
-            "methods": ["voting", "stacking", "bayesian-averaging", "dynamic-weighting"],
-            "meta-learner": "gradient-boosting",
-            "cross-validation": "stratified-k-fold"
-          },
-          "outputs": ["ensemble-architecture", "meta-model", "weighting-scheme"]
-        },
-        {
-          "id": "ensemble-training",
-          "name": "Ensemble Training",
-          "agent": "ensemble-builder",
-          "action": "train-ensemble",
-          "parameters": {
-            "base-models": "{selected-models}",
-            "method": "{ensemble-architecture}",
-            "regularization": "l2-penalty",
-            "validation": "hold-out"
-          },
-          "outputs": ["trained-ensemble", "meta-model-weights", "validation-performance"]
-        },
-        {
-          "id": "ensemble-pruning",
-          "name": "Ensemble Pruning",
-          "agent": "ensemble-builder",
-          "action": "prune-ensemble",
-          "parameters": {
-            "ensemble": "{trained-ensemble}",
-            "criteria": ["contribution-threshold", "redundancy-removal"],
-            "target-size": "pareto-optimal"
-          },
-          "outputs": ["pruned-ensemble", "pruning-decisions", "performance-impact"]
-        }
-      ]
-    },
-    {
-      "id": "phase5-robustness-validation",
-      "name": "Robustness Validation",
-      "description": "Comprehensive validation of model robustness",
-      "parallelizable": true,
-      "dependencies": ["phase4-ensemble-creation"],
-      "estimatedDuration": 75,
-      "steps": [
-        {
-          "id": "adversarial-testing",
-          "name": "Adversarial Robustness Testing",
-          "agent": "robustness-validator",
-          "action": "test-adversarial",
-          "parameters": {
-            "attacks": ["fgsm", "pgd", "c&w", "autoattack"],
-            "epsilons": [0.01, 0.03, 0.1],
-            "metrics": ["robust-accuracy", "attack-success-rate"]
-          },
-          "outputs": ["adversarial-results", "robustness-curves", "vulnerability-analysis"]
-        },
-        {
-          "id": "distributional-shift-testing",
-          "name": "Distribution Shift Testing",
-          "agent": "robustness-validator",
-          "action": "test-distribution-shift",
-          "parameters": {
-            "shifts": ["covariate-shift", "label-shift", "concept-drift"],
-            "datasets": ["domain-adaptation", "synthetic-corruption"],
-            "severity-levels": [1, 2, 3, 4, 5]
-          },
-          "outputs": ["shift-performance", "degradation-analysis", "adaptation-strategies"]
-        },
-        {
-          "id": "uncertainty-quantification",
-          "name": "Uncertainty Quantification",
-          "agent": "robustness-validator",
-          "action": "quantify-uncertainty",
-          "parameters": {
-            "methods": ["mc-dropout", "deep-ensembles", "variational-inference"],
-            "calibration": "temperature-scaling",
-            "evaluation": ["reliability-diagram", "ece", "mce"]
-          },
-          "outputs": ["uncertainty-estimates", "calibration-results", "reliability-metrics"]
-        },
-        {
-          "id": "stress-testing",
-          "name": "Stress Testing",
-          "agent": "robustness-validator",
-          "action": "stress-test",
-          "parameters": {
-            "scenarios": ["high-load", "edge-cases", "boundary-conditions"],
-            "metrics": ["latency", "throughput", "memory-usage", "accuracy-degradation"],
-            "duration": "sustained-load"
-          },
-          "outputs": ["stress-results", "performance-limits", "failure-modes"]
-        }
-      ]
-    },
-    {
-      "id": "phase6-documentation",
-      "name": "Documentation & Reporting",
-      "description": "Comprehensive documentation of the MLE-STAR process",
-      "parallelizable": true,
-      "dependencies": ["phase5-robustness-validation"],
-      "estimatedDuration": 30,
-      "steps": [
-        {
-          "id": "technical-documentation",
-          "name": "Technical Documentation",
-          "agent": "documentation-specialist",
-          "action": "create-documentation",
-          "parameters": {
-            "sections": ["methodology", "architecture", "experiments", "results"],
-            "format": "markdown",
-            "include": ["code", "figures", "tables", "references"]
-          },
-          "outputs": ["technical-report", "architecture-diagrams", "result-tables"]
-        },
-        {
-          "id": "reproducibility-package",
-          "name": "Reproducibility Package",
-          "agent": "documentation-specialist",
-          "action": "create-reproducibility-package",
-          "parameters": {
-            "components": ["code", "data", "models", "configs", "environment"],
-            "format": "docker-container",
-            "validation": "independent-reproduction"
-          },
-          "outputs": ["reproduction-package", "setup-instructions", "validation-results"]
-        },
-        {
-          "id": "performance-dashboard",
-          "name": "Performance Dashboard",
-          "agent": "documentation-specialist",
-          "action": "create-dashboard",
-          "parameters": {
-            "metrics": ["accuracy", "robustness", "efficiency", "uncertainty"],
-            "visualizations": ["charts", "heatmaps", "comparisons"],
-            "interactivity": "web-based"
-          },
-          "outputs": ["dashboard", "visualization-scripts", "metric-summaries"]
-        }
-      ]
-    }
-  ],
-  "workflows": {
-    "sequential": ["phase1-search", "phase2-ablation-outer-loop", "phase3-refinement-inner-loop", "phase4-ensemble-creation", "phase5-robustness-validation", "phase6-documentation"],
-    "parallel-opportunities": [
-      ["literature-search", "architecture-research", "baseline-identification"],
-      ["hyperparameter-optimization", "training-optimization", "data-augmentation"],
-      ["model-diversity-analysis", "ensemble-methods"],
-      ["adversarial-testing", "distributional-shift-testing", "uncertainty-quantification", "stress-testing"],
-      ["technical-documentation", "reproducibility-package", "performance-dashboard"]
-    ]
+  "hooks": {
+    "pre-task": "npx claude-flow@alpha hooks pre-task --description \"${task.name}\" --auto-spawn-agents false",
+    "post-task": "npx claude-flow@alpha hooks post-task --task-id \"${task.id}\" --analyze-performance true",
+    "on-error": "npx claude-flow@alpha hooks notify --message \"Error in ${task.id}: ${error.message}\" --telemetry true"
   },
-  "outputs": {
-    "primary": [
-      "optimized-model-ensemble",
-      "robustness-validation-report",
-      "technical-documentation",
-      "reproducibility-package"
-    ],
-    "intermediate": [
-      "research-synthesis",
-      "ablation-study-results",
-      "architecture-refinements",
-      "ensemble-configurations",
-      "robustness-metrics"
-    ],
-    "artifacts": [
-      "trained-models",
-      "experiment-logs",
-      "performance-benchmarks",
-      "visualization-assets",
-      "deployment-configs"
-    ]
-  },
-  "claudePromptInjection": {
-    "globalPrompt": "You are an expert Machine Learning Engineer implementing the MLE-STAR methodology. Focus on scientific rigor, reproducibility, and practical deployment considerations. Always validate assumptions with empirical evidence and maintain detailed documentation throughout the process.",
-    "phasePrompts": {
-      "phase1-search": "Conduct a comprehensive literature review focusing on recent advances (2023-2024) in {domain}. Prioritize papers with code availability and strong empirical validation. Look for emerging trends and identify gaps in current approaches.",
-      "phase2-ablation-outer-loop": "Design and execute systematic ablation studies following best practices. Use proper statistical testing, control for confounding variables, and ensure reproducible experimental conditions. Focus on identifying the most impactful components.",
-      "phase3-refinement-inner-loop": "Optimize the refined architecture using advanced techniques. Employ multi-objective optimization considering accuracy, efficiency, and robustness. Document all hyperparameter choices and training procedures.",
-      "phase4-ensemble-creation": "Build diverse and complementary ensemble models. Balance accuracy improvements with computational efficiency. Use proper validation to avoid overfitting the ensemble selection process.",
-      "phase5-robustness-validation": "Conduct thorough robustness evaluation using multiple attack vectors and distribution shifts. Quantify uncertainty properly and test edge cases. Focus on real-world deployment scenarios.",
-      "phase6-documentation": "Create comprehensive documentation that enables independent reproduction. Include all implementation details, experimental setups, and clear explanations of design choices."
-    },
-    "agentPrompts": {
-      "research-coordinator": "You are a research specialist with expertise in ML literature review and trend analysis. Focus on finding high-quality, recent papers with strong experimental validation. Synthesize findings into actionable insights.",
-      "ml-architect": "You are a machine learning architect with deep knowledge of model design and optimization. Create elegant, efficient architectures that balance performance with practical constraints.",
-      "ablation-engineer": "You are an experimental design expert specializing in ablation studies. Design rigorous experiments that isolate the impact of individual components. Use proper statistical methods for analysis.",
-      "ensemble-builder": "You are an ensemble methods specialist. Create diverse, complementary models that improve overall performance. Focus on principled combination strategies and avoid overfitting.",
-      "robustness-validator": "You are a robustness testing expert. Design comprehensive evaluation protocols that test model behavior under various challenging conditions. Focus on practical deployment scenarios.",
-      "performance-optimizer": "You are a performance optimization specialist. Improve model efficiency while maintaining accuracy. Consider hardware constraints and deployment requirements in your optimizations.",
-      "documentation-specialist": "You are a technical writer with ML expertise. Create clear, comprehensive documentation that enables reproduction and understanding. Focus on clarity and completeness.",
-      "orchestrator": "You are the workflow orchestrator ensuring smooth coordination between all phases. Monitor progress, manage dependencies, and optimize resource allocation across the entire MLE-STAR process."
-    }
-  },
-  "errorHandling": {
-    "retryPolicies": {
-      "web-search": {"maxRetries": 3, "backoffMs": 5000},
-      "model-training": {"maxRetries": 2, "backoffMs": 30000},
-      "experiment-execution": {"maxRetries": 1, "backoffMs": 60000}
-    },
-    "fallbackStrategies": {
-      "search-failure": "use-cached-results",
-      "training-failure": "reduce-model-complexity",
-      "resource-exhaustion": "scale-down-experiments"
-    },
-    "checkpoints": {
-      "frequency": "per-phase",
-      "storage": "persistent",
-      "recovery": "automatic"
-    }
-  },
-  "performance": {
-    "resourceLimits": {
-      "maxMemoryGb": 32,
-      "maxCpuCores": 16,
-      "maxGpuCount": 4,
-      "timeoutMinutes": 360
-    },
-    "monitoring": {
-      "metrics": ["cpu-usage", "memory-usage", "gpu-utilization", "task-progress"],
-      "alerting": ["resource-threshold", "task-failure", "timeout-warning"],
-      "reporting": "real-time-dashboard"
-    }
+  "settings": {
+    "maxConcurrency": 4,
+    "timeout": 3600000,
+    "retryPolicy": "exponential",
+    "failurePolicy": "continue",
+    "memoryCoordination": true,
+    "progressTracking": "detailed",
+    "outputFormat": "stream-json"
   }
 }
