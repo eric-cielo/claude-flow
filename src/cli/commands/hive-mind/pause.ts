@@ -20,7 +20,7 @@ export const pauseCommand = new Command('pause')
       if (options.session) {
         // Pause specific session
         const sessionId = options.session;
-        const session = sessionManager.getSession(sessionId);
+        const session = await sessionManager.getSession(sessionId);
 
         if (!session) {
           console.log(chalk.red(`Session ${sessionId} not found`));
