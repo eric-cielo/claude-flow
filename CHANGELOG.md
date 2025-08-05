@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.86] - 2025-08-05
+
+### 🐛 Bug Fixes
+- **Import Alias Fix**: Removed unnecessary `execSyncOriginal` alias in init/index.js (PR #558)
+  - Fixed unused import alias that was causing confusion
+  - Simplified import statement for better code clarity
+
+### 🔄 Version Updates
+- Updated version strings across the codebase to alpha-86
+- Updated package.json version
+- Updated CLI help text version references
+- Updated --version command output
+
+### 📚 Documentation
+- Updated CHANGELOG.md with latest release notes
+
 ## [2.0.0-alpha.85] - 2025-08-05
 
 ### ✨ New Features

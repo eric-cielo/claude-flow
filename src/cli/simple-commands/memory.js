@@ -1,11 +1,15 @@
 // memory.js - Memory management commands
-import { printSuccess, printError, printWarning } from '../utils.js';
+import { printSuccess, printError, printWarning, printInfo } from '../utils.js';
 import { promises as fs } from 'fs';
 import { cwd, exit, existsSync } from '../node-compat.js';
+import { getUnifiedMemory } from '../../memory/unified-memory-manager.js';
 
 export async function memoryCommand(subArgs, flags) {
   const memorySubcommand = subArgs[0];
   const memoryStore = './memory/memory-store.json';
+  
+  // Extract namespace from flags or subArgs
+  const namespace = flags?.namespace || flags?.ns || getNamespaceFromArgs(subArgs) || 'default';
 
   // Helper to load memory data
   async function loadMemory() {
@@ -25,11 +29,11 @@ export async function memoryCommand(subArgs, flags) {
 
   switch (memorySubcommand) {
     case 'store':
-      await storeMemory(subArgs, loadMemory, saveMemory);
+      await storeMemory(subArgs, loadMemory, saveMemory, namespace);
       break;
 
     case 'query':
-      await queryMemory(subArgs, loadMemory);
+      await queryMemory(subArgs, loadMemory, namespace);
       break;
 
     case 'stats':
@@ -37,15 +41,15 @@ export async function memoryCommand(subArgs, flags) {
       break;
 
     case 'export':
-      await exportMemory(subArgs, loadMemory);
+      await exportMemory(subArgs, loadMemory, namespace);
       break;
 
     case 'import':
-      await importMemory(subArgs, saveMemory);
+      await importMemory(subArgs, saveMemory, loadMemory);
       break;
 
     case 'clear':
-      await clearMemory(subArgs, saveMemory);
+      await clearMemory(subArgs, saveMemory, namespace);
       break;
 
     case 'list':
@@ -57,18 +61,17 @@ export async function memoryCommand(subArgs, flags) {
   }
 }
 
-async function storeMemory(subArgs, loadMemory, saveMemory) {
+async function storeMemory(subArgs, loadMemory, saveMemory, namespace) {
   const key = subArgs[1];
   const value = subArgs.slice(2).join(' ');
 
   if (!key || !value) {
-    printError('Usage: memory store <key> <value>');
+    printError('Usage: memory store <key> <value> [--namespace <ns>]');
     return;
   }
 
   try {
     const data = await loadMemory();
-    const namespace = getNamespaceFromArgs(subArgs) || 'default';
 
     if (!data[namespace]) {
       data[namespace] = [];
@@ -95,17 +98,16 @@ async function storeMemory(subArgs, loadMemory, saveMemory) {
   }
 }
 
-async function queryMemory(subArgs, loadMemory) {
+async function queryMemory(subArgs, loadMemory, namespace) {
   const search = subArgs.slice(1).join(' ');
 
   if (!search) {
-    printError('Usage: memory query <search>');
+    printError('Usage: memory query <search> [--namespace <ns>]');
     return;
   }
 
   try {
     const data = await loadMemory();
-    const namespace = getNamespaceFromArgs(subArgs);
     const results = [];
 
     for (const [ns, entries] of Object.entries(data)) {
@@ -174,12 +176,11 @@ async function showMemoryStats(loadMemory) {
   }
 }
 
-async function exportMemory(subArgs, loadMemory) {
+async function exportMemory(subArgs, loadMemory, namespace) {
   const filename = subArgs[1] || `memory-export-${Date.now()}.json`;
 
   try {
     const data = await loadMemory();
-    const namespace = getNamespaceFromArgs(subArgs);
 
     let exportData = data;
     if (namespace) {
@@ -201,7 +202,7 @@ async function exportMemory(subArgs, loadMemory) {
   }
 }
 
-async function importMemory(subArgs, saveMemory) {
+async function importMemory(subArgs, saveMemory, loadMemory) {
   const filename = subArgs[1];
 
   if (!filename) {
@@ -238,16 +239,28 @@ async function importMemory(subArgs, saveMemory) {
   }
 }
 
-async function clearMemory(subArgs, saveMemory) {
-  const namespace = getNamespaceFromArgs(subArgs);
-
-  if (!namespace) {
-    printError('Usage: memory clear --namespace <namespace>');
-    printWarning('This will clear all entries in the specified namespace');
-    return;
+async function clearMemory(subArgs, saveMemory, namespace) {
+  if (!namespace || namespace === 'default') {
+    const nsFromArgs = getNamespaceFromArgs(subArgs);
+    if (!nsFromArgs) {
+      printError('Usage: memory clear --namespace <namespace>');
+      printWarning('This will clear all entries in the specified namespace');
+      return;
+    }
+    namespace = nsFromArgs;
   }
 
   try {
+    // Helper to load memory data
+    async function loadMemory() {
+      try {
+        const content = await fs.readFile('./memory/memory-store.json', 'utf8');
+        return JSON.parse(content);
+      } catch {
+        return {};
+      }
+    }
+    
     const data = await loadMemory();
 
     if (!data[namespace]) {

@@ -27,7 +27,7 @@ import process from 'process';
 import readline from 'readline';
 import { getMainHelp, getCommandHelp, getStandardizedCommandHelp } from './help-text.js';
 
-const VERSION = '2.0.0-alpha.85';
+const VERSION = '2.0.0-alpha.86';
 
 // Legacy agent type mapping for backward compatibility
 const LEGACY_AGENT_MAPPING = {

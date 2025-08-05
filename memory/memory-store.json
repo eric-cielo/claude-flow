@@ -13,12 +13,6 @@
       "timestamp": 1752724794280
     },
     {
-      "key": "test-key",
-      "value": "test-value",
-      "namespace": "default",
-      "timestamp": 1752725674570
-    },
-    {
       "key": "mcp-test-key",
       "value": "MCP persistence working",
       "namespace": "default",
@@ -509,6 +503,24 @@
       "value": "{\"status\":\"completed\",\"agent\":\"orchestrator\",\"executionTime\":4097,\"metadata\":{\"timestamp\":\"2025-08-05T03:40:55.041Z\",\"executionId\":\"workflow-exec-1754364775057-khmjv079m\",\"mode\":\"claude-task-execution\"}}",
       "namespace": "default",
       "timestamp": 1754365256503
+    },
+    {
+      "key": "test-key",
+      "value": "This is a test value for memory system",
+      "namespace": "default",
+      "timestamp": 1754401926999
+    },
+    {
+      "key": "swarm-test",
+      "value": "Testing swarm namespace",
+      "namespace": "default",
+      "timestamp": 1754401946375
+    },
+    {
+      "key": "testkey2",
+      "value": "test value 2 in default",
+      "namespace": "default",
+      "timestamp": 1754403771773
     }
   ]
 }
