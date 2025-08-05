@@ -13,8 +13,7 @@ import {
   listCommands,
 } from './command-registry.js';
 import { parseFlags } from './utils.js';
-
-const VERSION = '2.0.0-alpha.85';
+import { VERSION } from '../core/version.js';
 
 function printHelp() {
   console.log(`

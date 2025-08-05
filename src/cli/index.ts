@@ -25,10 +25,7 @@ import { mcpCommand } from './commands/mcp.js';
 import { formatError, displayBanner, displayVersion } from './formatter.js';
 import { startREPL } from './repl.js';
 import { CompletionGenerator } from './completion.js';
-
-// Version information
-const VERSION = '2.0.0-alpha.85';
-const BUILD_DATE = new Date().toISOString().split('T')[0];
+import { VERSION, BUILD_DATE } from '../core/version.js';
 
 // Main CLI command
 const cli = new Command()

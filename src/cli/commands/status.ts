@@ -7,6 +7,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import Table from 'cli-table3';
 import { formatHealthStatus, formatDuration, formatStatusIndicator } from '../formatter.js';
+import { VERSION } from '../../core/version.js';
 
 export const statusCommand = new Command()
   .name('status')
@@ -267,7 +268,7 @@ async function getSystemStatus(): Promise<any> {
   // For now, return mock data
   return {
     overall: 'healthy',
-    version: '2.0.0-alpha.85',
+    version: VERSION,
     uptime: 3600000,
     startTime: Date.now() - 3600000,
     components: {

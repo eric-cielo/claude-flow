@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0-alpha.87] - 2025-08-05
+
+### ✨ New Features
+- **Centralized Version Management**: Version now reads dynamically from package.json
+  - Single source of truth for version numbers
+  - Automatic version updates across all CLI commands
+  - No more manual version string updates needed
+  - Fallback support if package.json can't be read
+
+### 🐛 Bug Fixes
+- **Async/Await Fixes**: Fixed missing await keywords in hive-mind commands
+  - Fixed `getActiveSessionsWithProcessInfo()` missing await in stop.ts (lines 24, 90)
+  - Fixed `getSession()` missing await in stop.ts (line 57) 
+  - Fixed `getSession()` missing await in pause.ts (line 23)
+  - Resolves "sessions.forEach is not a function" errors
+
+### 🔧 Improvements
+- **Code Organization**: Created centralized version module
+  - Added `src/core/version.ts` and `src/core/version.js`
+  - Updated all CLI entry points to use centralized version
+  - Improved maintainability and consistency
+
+### 🔄 Synced with Main
+- Merged all latest changes from main branch
+- Includes PR #584 (session resume fix)
+- Includes all recent bug fixes and improvements
+
 ## [2.0.0-alpha.86] - 2025-08-05
 
 ### 🐛 Bug Fixes

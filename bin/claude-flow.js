@@ -7,15 +7,17 @@
 
 import { fileURLToPath } from 'url';
 import { dirname, join, resolve } from 'path';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { spawn } from 'child_process';
 import process from 'process';
 
-const VERSION = "2.0.0-alpha.85";
-
-// Get script directory and root directory
+// Read version from package.json
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const packageJson = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf-8'));
+const VERSION = packageJson.version;
+
+// Get root directory
 const ROOT_DIR = resolve(__dirname, '..');
 
 // Show help if no arguments provided
