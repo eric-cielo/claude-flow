@@ -2,7 +2,7 @@
 import { printSuccess, printError, printWarning, exit } from '../../utils.js';
 import { existsSync } from 'fs';
 import process from 'process';
-import { spawn, execSync as execSyncOriginal } from 'child_process';
+import { spawn, execSync } from 'child_process';
 import { promisify } from 'util';
 
 // Helper to replace Deno.Command
