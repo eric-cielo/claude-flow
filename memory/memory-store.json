@@ -419,6 +419,12 @@
       "value": "{\"status\":\"completed\",\"agent\":\"search_agent\",\"executionTime\":52713,\"metadata\":{\"timestamp\":\"2025-08-05T02:51:58.115Z\",\"executionId\":\"workflow-exec-1754362260764-gna96eb5p\",\"mode\":\"claude-task-execution\"}}",
       "namespace": "default",
       "timestamp": 1754362319560
+    },
+    {
+      "key": "agent/search_agent/init",
+      "value": "{\"status\":\"initialized\",\"timestamp\":\"2025-08-05T03:33:00Z\",\"session_id\":\"automation-session-1754364781767-dfu1es1r6\",\"execution_id\":\"workflow-exec-1754364781767-43bz1zram\",\"capabilities\":[\"web_search\",\"model_research\",\"approach_validation\"],\"phase\":\"search_phase\"}",
+      "namespace": "default",
+      "timestamp": 1754364842858
     }
   ]
 }
