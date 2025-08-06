@@ -9,7 +9,7 @@ import asyncio
 from pathlib import Path
 
 # Add benchmark source to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from swarm_benchmark.claude_optimizer import (
     ClaudeMdOptimizer,

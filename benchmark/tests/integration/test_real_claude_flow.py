@@ -12,7 +12,7 @@ from pathlib import Path
 import sys
 
 # Add parent directory to path to access claude-flow
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 class RealClaudeFlowBenchmark:
     def __init__(self):
