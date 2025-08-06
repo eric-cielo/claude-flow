@@ -13,6 +13,7 @@ from .ml_scenarios import MLScenarios, BenchmarkScenario, ClassificationScenario
 
 __all__ = [
     'MLEStarEnsembleExecutor',
+    'MLEStarConfig',
     'VotingStrategy',
     'MajorityVoting', 
     'WeightedVoting',
@@ -23,7 +24,9 @@ __all__ = [
     'PerformanceTracker',
     'EnsembleMetrics',
     'MLScenarios',
-    'BenchmarkScenario'
+    'BenchmarkScenario',
+    'ClassificationScenario',
+    'RegressionScenario'
 ]
 
 __version__ = '1.0.0'
