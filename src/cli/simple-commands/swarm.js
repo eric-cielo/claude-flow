@@ -908,10 +908,6 @@ The swarm should be self-documenting - use memory_store to save all important in
         claudeArgs.push('-p'); // Print mode
         claudeArgs.push('--output-format', 'stream-json'); // JSON streaming
         claudeArgs.push('--verbose'); // Verbose output
-        
-        console.log('🤖 Running in non-interactive mode with Claude CLI');
-        console.log('📋 Command: claude [prompt] -p --output-format stream-json --verbose');
-        console.log('💡 Tip: Use --claude flag to open Claude Code CLI instead');
       }
 
       // Spawn claude with the prompt as the first argument
