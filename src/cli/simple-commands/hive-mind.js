@@ -2002,8 +2002,8 @@ async function spawnClaudeCodeInstances(swarmId, swarmName, objective, workers, 
 
       if (claudeAvailable && !flags.dryRun) {
         // Check if we should run in non-interactive mode
-        // --claude flag forces interactive mode, otherwise respect --non-interactive
-        const isNonInteractive = !flags.claude && (flags['non-interactive'] || flags.nonInteractive);
+        // Respect --non-interactive flag regardless of --claude
+        const isNonInteractive = flags['non-interactive'] || flags.nonInteractive;
         
         // Pass the prompt directly as an argument to claude
         const claudeArgs = [hiveMindPrompt];
