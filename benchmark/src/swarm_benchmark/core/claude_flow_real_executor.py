@@ -288,14 +288,13 @@ class RealClaudeFlowExecutor:
         return "./claude-flow"
     
     def execute_swarm(self, config: SwarmCommand) -> RealExecutionResult:
-        """Execute a real swarm command (non-interactive by default)."""
-        # Build real swarm command - always non-interactive
+        """Execute a real swarm command with built-in executor (non-interactive)."""
+        # Build real swarm command with --executor for non-interactive execution
         command = [
             self.claude_flow_path,
             "swarm",
             config.objective,
-            "--executor",  # Always use built-in executor
-            "--analysis",  # Read-only mode for safety
+            "--executor",  # Use built-in executor for non-interactive mode
             "--strategy", config.strategy,
             "--mode", config.mode,
             "--max-agents", str(config.max_agents)
@@ -311,7 +310,7 @@ class RealClaudeFlowExecutor:
         return self._execute_streaming_command(command, timeout)
     
     def execute_hive_mind(self, config: HiveMindCommand) -> RealExecutionResult:
-        """Execute a real hive-mind command (non-interactive by default)."""
+        """Execute a real hive-mind command with built-in executor (non-interactive)."""
         command = [
             self.claude_flow_path,
             "hive-mind",
@@ -325,8 +324,8 @@ class RealClaudeFlowExecutor:
             command.extend(["--count", str(config.spawn_count)])
             command.extend(["--coordination", config.coordination_mode])
         
-        # Always non-interactive
-        command.extend(["--executor", "--analysis"])
+        # Use executor for non-interactive mode
+        command.append("--executor")
         
         # Add additional flags
         if config.additional_flags:
@@ -456,13 +455,8 @@ class RealClaudeFlowExecutor:
             
             duration = time.time() - start_time
             
-            # Check if we need fallback for Claude CLI errors
-            if is_ai_command and exit_code != 0:
-                error_indicators = ["EPIPE", "Error: write EPIPE", "claude", "not found"]
-                combined_output = " ".join(stderr_lines + stdout_lines)
-                if any(indicator in combined_output for indicator in error_indicators):
-                    logger.info("Claude CLI error detected, using fallback simulation")
-                    return self._create_fallback_result(command, duration)
+            # No fallback - always use real execution
+            # If Claude CLI is not available, the command will fail and that's expected
             
             # Create result
             result = RealExecutionResult(
@@ -505,39 +499,7 @@ class RealClaudeFlowExecutor:
                 errors=[str(e)]
             )
     
-    def _create_fallback_result(self, command: List[str], duration: float) -> RealExecutionResult:
-        """Create a fallback result when Claude CLI is not available."""
-        # Simulate successful execution
-        objective = "unknown"
-        for i, cmd in enumerate(command):
-            if cmd in ["swarm", "hive-mind"] and i + 1 < len(command):
-                objective = command[i + 1]
-                break
-        
-        return RealExecutionResult(
-            success=True,
-            command=command,
-            exit_code=0,
-            duration=duration,
-            stdout_lines=[
-                "🤖 Benchmark Simulation Mode (Claude CLI not available)",
-                f"📋 Objective: {objective}",
-                "✅ Simulated successful execution",
-                "💡 Install Claude CLI for real execution: npm install -g @anthropic-ai/claude-code"
-            ],
-            stderr_lines=[],
-            input_tokens=100,  # Simulated
-            output_tokens=200,  # Simulated
-            total_tokens=300,
-            agents_spawned=3,
-            tasks_completed=1,
-            tool_calls=[],
-            tool_results=[],
-            errors=[],
-            warnings=["Running in simulation mode - Claude CLI not available"],
-            first_response_time=0.1,
-            completion_time=duration
-        )
+    # Removed fallback - always use real execution
     
     async def execute_swarm_async(self, config: SwarmCommand) -> RealExecutionResult:
         """Execute swarm command asynchronously."""
