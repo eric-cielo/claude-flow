@@ -454,7 +454,18 @@ def sparc(ctx, mode, task, namespace, timeout, non_interactive, output_dir):
                 if result.total_tokens:
                     click.echo(f"Tokens used: {result.total_tokens}")
         else:
-            click.echo(f"❌ SPARC benchmark failed: {result.error}")
+            error_msg = ""
+            if result.errors:
+                error_msg = "; ".join(result.errors)
+            elif result.exit_code == -9:
+                error_msg = f"Command timed out or was killed (exit code: {result.exit_code})"
+            elif result.exit_code != 0:
+                error_msg = f"Command failed with exit code: {result.exit_code}"
+            else:
+                error_msg = "Unknown error"
+            click.echo(f"❌ SPARC benchmark failed: {error_msg}")
+            if ctx.obj.get('verbose') and result.stderr_lines:
+                click.echo(f"Stderr: {' '.join(result.stderr_lines[:5])}")
             return 1
             
     except Exception as e:
