@@ -421,7 +421,6 @@ async function executeStreamStep(prompt, inputStream, isLast, flags = {}) {
       
       // Don't resolve if we already timed out and started mock fallback
       if (timedOut) {
-        console.log('   Debug: Process closed after timeout, ignoring...');
         return;
       }
       
