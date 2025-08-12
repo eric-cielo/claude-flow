@@ -778,18 +778,21 @@ The swarm should be self-documenting - use memory_store to save all important in
         console.log('🚀 Launching Claude Code with Swarm Coordination');
         console.log('─'.repeat(60));
         
-        // Pass the prompt directly as an argument to claude
-        const claudeArgs = [swarmPrompt];
+        // Build arguments properly: for interactive mode, prompt can be first
+        const claudeArgs = [];
         
-        // Add auto-permission flag by default for swarm mode (unless explicitly disabled)
+        // Add auto-permission flag first
         if (flags['dangerously-skip-permissions'] !== false && !flags['no-auto-permissions']) {
           claudeArgs.push('--dangerously-skip-permissions');
           console.log('🔓 Using --dangerously-skip-permissions by default for seamless swarm execution');
         }
         
+        // Add the prompt (for interactive mode, position doesn't matter as much)
+        claudeArgs.push(swarmPrompt);
+        
         // --claude flag means interactive mode, so don't add non-interactive flags
         
-        // Spawn claude with the prompt as the first argument (exactly like hive-mind does)
+        // Spawn claude with properly ordered arguments
         const claudeProcess = spawn('claude', claudeArgs, {
           stdio: 'inherit',
           shell: false,
