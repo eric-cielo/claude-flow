@@ -460,14 +460,12 @@ async function runDemoChain(flags) {
     "Implement the core functionality based on the design"
   ];
 
-  // Use real mode if Claude CLI is available, unless mock is explicitly requested
+  // For demo reliability, default to mock mode unless --real flag is used
   const demoFlags = { ...flags };
-  if (flags.mock) {
-    demoFlags.mock = true;
-  } else if (!checkClaudeAvailable()) {
+  if (!flags.real) {
     demoFlags.mock = true;
   }
-  // Otherwise use real mode (Claude CLI is available)
+  // Use real mode only if --real flag is explicitly provided
 
   return runStreamChain(demoPrompts, demoFlags);
 }
