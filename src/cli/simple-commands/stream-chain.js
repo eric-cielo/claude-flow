@@ -719,8 +719,8 @@ RELATED COMMANDS
 
 DOCUMENTATION
     Wiki:       ./claude-flow-wiki/Stream-Chain-Command.md
-    Examples:   ./docs/wiki/stream-chain-command.md
-    API:        ./docs/wiki/background-commands.md
+    Examples:   ./claude-flow-wiki/Stream-Chain-Command.md
+    API:        ./claude-flow-wiki/background-commands.md
 
 VERSION
     Claude Flow Alpha 89 - Stream Chain v1.2.0
