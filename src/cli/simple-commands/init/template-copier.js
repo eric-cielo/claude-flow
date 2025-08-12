@@ -32,7 +32,8 @@ export async function copyTemplates(targetDir, options = {}) {
     const templatesDir = join(__dirname, 'templates');
     
     // Determine which template variants to use
-    const templateVariant = options.optimized ? 'optimized' : 
+    const templateVariant = (options.verify || options.pair) ? 'verification' :
+                          options.optimized ? 'optimized' : 
                           options.enhanced ? 'enhanced' :
                           options.minimal ? 'minimal' : 
                           options.sparc ? 'sparc' : 'full';
