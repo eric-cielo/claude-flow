@@ -697,83 +697,102 @@ docker stop claude-flow
 docker rm claude-flow
 ```
 
----
-
-## Kubernetes Deployment
-
-### Deployment Manifest
+#### Services and Ingress
 
 ```yaml
-apiVersion: apps/v1
-kind: Deployment
+# k8s/service.yaml
+apiVersion: v1
+kind: Service
 metadata:
-  name: claude-flow
-  namespace: default
+  name: claude-flow-service
+  namespace: claude-flow
   labels:
     app: claude-flow
-    version: v2.0.0
 spec:
-  replicas: 3
+  type: ClusterIP
   selector:
-    matchLabels:
-      app: claude-flow
-  template:
-    metadata:
-      labels:
-        app: claude-flow
-    spec:
-      containers:
-      - name: claude-flow
-        image: claudeflow/claude-flow:alpha
-        ports:
-        - containerPort: 3000
-          name: api
-        - containerPort: 8080
-          name: mcp
-        env:
-        - name: NODE_ENV
-          value: "production"
-        - name: CLAUDE_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: claude-flow-secrets
-              key: claude-api-key
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: claude-flow-secrets
-              key: database-url
-        resources:
-          requests:
-            memory: "512Mi"
-            cpu: "500m"
-          limits:
-            memory: "2Gi"
-            cpu: "2000m"
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 3000
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /ready
-            port: 3000
-          initialDelaySeconds: 5
-          periodSeconds: 5
-        volumeMounts:
-        - name: config
-          mountPath: /app/config
-        - name: data
-          mountPath: /data
-      volumes:
-      - name: config
-        configMap:
-          name: claude-flow-config
-      - name: data
-        persistentVolumeClaim:
-          claimName: claude-flow-pvc
+    app: claude-flow
+  ports:
+  - name: http
+    port: 80
+    targetPort: 3000
+    protocol: TCP
+  - name: mcp
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+---
+# Load Balancer Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: claude-flow-lb
+  namespace: claude-flow
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "arn:aws:acm:us-west-2:123456789:certificate/..."
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "https"
+spec:
+  type: LoadBalancer
+  selector:
+    app: claude-flow
+  ports:
+  - name: https
+    port: 443
+    targetPort: 3000
+    protocol: TCP
+  - name: http
+    port: 80
+    targetPort: 3000
+    protocol: TCP
+---
+# Ingress for advanced routing
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: claude-flow-ingress
+  namespace: claude-flow
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+spec:
+  tls:
+  - hosts:
+    - api.claude-flow.com
+    - mcp.claude-flow.com
+    secretName: claude-flow-tls
+  rules:
+  - host: api.claude-flow.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: claude-flow-service
+            port:
+              number: 80
+  - host: mcp.claude-flow.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: claude-flow-service
+            port:
+              number: 8080
 ```
 
 ### Service Manifest
