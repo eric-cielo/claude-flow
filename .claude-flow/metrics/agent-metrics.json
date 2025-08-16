@@ -1,1 +1,17 @@
-{}
+{
+  "general": {
+    "total": 1,
+    "successful": 1,
+    "failed": 0,
+    "totalDuration": 0.000642000000027565,
+    "actions": [
+      {
+        "id": "general-1755355495383",
+        "action": "spawn",
+        "duration": 0.000642000000027565,
+        "success": true,
+        "timestamp": 1755355495384
+      }
+    ]
+  }
+}
