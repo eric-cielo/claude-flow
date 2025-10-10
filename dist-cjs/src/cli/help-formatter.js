@@ -24,6 +24,9 @@ export class HelpFormatter {
         if (info.examples && info.examples.length > 0) {
             sections.push(this.formatSection('EXAMPLES', info.examples));
         }
+        if (info.details) {
+            sections.push('\n' + info.details);
+        }
         if (info.commands && info.commands.length > 0) {
             sections.push(`Run '${info.name} <command> --help' for more information on a command.`);
         }
@@ -81,11 +84,6 @@ export class HelpFormatter {
         const emojiPattern = /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{27BF}]|[\u{1F000}-\u{1F6FF}]|[\u{1F680}-\u{1F6FF}]/gu;
         text = text.replace(emojiPattern, '').trim();
         text = text.replace(/\s+/g, ' ');
-        return text;
-    }
-}
-
-//# sourceMappingURL=help-formatter.js.map/\s+/g, ' ');
         return text;
     }
 }

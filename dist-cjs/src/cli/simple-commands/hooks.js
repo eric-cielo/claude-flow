@@ -1002,16 +1002,21 @@ async function notifyCommand(subArgs, flags) {
     }
 }
 async function modifyBashCommand(subArgs, flags) {
-    if (process.stdin.isTTY) {
-        console.log('Usage: echo \'{"tool_input":{"command":"your command"}}\' | claude-flow hooks modify-bash');
-        console.log('\nThis hook reads JSON from stdin and outputs modified JSON.');
-        console.log('It is designed for use with Claude Code v2.0.10+ PreToolUse feature.');
-        console.log('\nExample:');
-        console.log('  echo \'{"tool_input":{"command":"rm test.txt"}}\' | claude-flow hooks modify-bash');
-        return;
-    }
     let input = '';
+    let hasInput = false;
+    const timeout = setTimeout(()=>{
+        if (!hasInput) {
+            console.log('Usage: echo \'{"tool_input":{"command":"your command"}}\' | claude-flow hooks modify-bash');
+            console.log('\nThis hook reads JSON from stdin and outputs modified JSON.');
+            console.log('It is designed for use with Claude Code v2.0.10+ PreToolUse feature.');
+            console.log('\nExample:');
+            console.log('  echo \'{"tool_input":{"command":"rm test.txt"}}\' | claude-flow hooks modify-bash');
+            process.exit(0);
+        }
+    }, 100);
     for await (const chunk of process.stdin){
+        hasInput = true;
+        clearTimeout(timeout);
         input += chunk;
     }
     if (!input.trim()) {
@@ -1056,16 +1061,21 @@ async function modifyBashCommand(subArgs, flags) {
     console.log(JSON.stringify(output, null, 2));
 }
 async function modifyFileCommand(subArgs, flags) {
-    if (process.stdin.isTTY) {
-        console.log('Usage: echo \'{"tool_input":{"file_path":"your/file.js"}}\' | claude-flow hooks modify-file');
-        console.log('\nThis hook reads JSON from stdin and outputs modified JSON.');
-        console.log('It is designed for use with Claude Code v2.0.10+ PreToolUse feature.');
-        console.log('\nExample:');
-        console.log('  echo \'{"tool_input":{"file_path":"test.js"}}\' | claude-flow hooks modify-file');
-        return;
-    }
     let input = '';
+    let hasInput = false;
+    const timeout = setTimeout(()=>{
+        if (!hasInput) {
+            console.log('Usage: echo \'{"tool_input":{"file_path":"your/file.js"}}\' | claude-flow hooks modify-file');
+            console.log('\nThis hook reads JSON from stdin and outputs modified JSON.');
+            console.log('It is designed for use with Claude Code v2.0.10+ PreToolUse feature.');
+            console.log('\nExample:');
+            console.log('  echo \'{"tool_input":{"file_path":"test.js"}}\' | claude-flow hooks modify-file');
+            process.exit(0);
+        }
+    }, 100);
     for await (const chunk of process.stdin){
+        hasInput = true;
+        clearTimeout(timeout);
         input += chunk;
     }
     if (!input.trim()) {
@@ -1124,16 +1134,21 @@ async function modifyFileCommand(subArgs, flags) {
     console.log(JSON.stringify(output, null, 2));
 }
 async function modifyGitCommitCommand(subArgs, flags) {
-    if (process.stdin.isTTY) {
-        console.log('Usage: echo \'{"tool_input":{"command":"git commit -m \\"message\\""}}\'  | claude-flow hooks modify-git-commit');
-        console.log('\nThis hook reads JSON from stdin and outputs modified JSON.');
-        console.log('It is designed for use with Claude Code v2.0.10+ PreToolUse feature.');
-        console.log('\nExample:');
-        console.log('  echo \'{"tool_input":{"command":"git commit -m \\"fix bug\\""}}\'  | claude-flow hooks modify-git-commit');
-        return;
-    }
     let input = '';
+    let hasInput = false;
+    const timeout = setTimeout(()=>{
+        if (!hasInput) {
+            console.log('Usage: echo \'{"tool_input":{"command":"git commit -m \\"message\\""}}\'  | claude-flow hooks modify-git-commit');
+            console.log('\nThis hook reads JSON from stdin and outputs modified JSON.');
+            console.log('It is designed for use with Claude Code v2.0.10+ PreToolUse feature.');
+            console.log('\nExample:');
+            console.log('  echo \'{"tool_input":{"command":"git commit -m \\"fix bug\\""}}\'  | claude-flow hooks modify-git-commit');
+            process.exit(0);
+        }
+    }, 100);
     for await (const chunk of process.stdin){
+        hasInput = true;
+        clearTimeout(timeout);
         input += chunk;
     }
     if (!input.trim()) {
