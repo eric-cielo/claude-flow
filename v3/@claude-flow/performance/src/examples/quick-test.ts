@@ -29,7 +29,7 @@ async function quickTest() {
     // Test 2: V3 optimizer
     console.log('\n✓ Test 2: V3 FlashAttentionOptimizer');
     const optimizer = createFlashAttentionOptimizer(128);
-    const output = await optimizer.optimize({
+    const output = optimizer.optimize({
       query: new Float32Array(128).fill(1.0),
       keys: Array.from({ length: 50 }, () => new Float32Array(128).fill(1.0)),
       values: Array.from({ length: 50 }, () => new Float32Array(128).fill(1.0)),
@@ -39,7 +39,7 @@ async function quickTest() {
 
     // Test 3: Quick benchmark
     console.log('\n✓ Test 3: Quick benchmark');
-    const benchResult = await quickBenchmark(256);
+    const benchResult = quickBenchmark(256);
     console.log(`  Flash: ${benchResult.flashAttention.averageTimeMs.toFixed(3)}ms`);
     console.log(`  Baseline: ${benchResult.baseline.averageTimeMs.toFixed(3)}ms`);
     console.log(`  Speedup: ${benchResult.speedup.toFixed(2)}x`);
