@@ -1,0 +1,803 @@
+{
+  "patterns": {
+    "edit:.json": {
+      "config-specialist": 2356.7999999999683
+    },
+    "edit:.md": {
+      "documentation-specialist": 833.9999999999649
+    },
+    "edit:.sh": {
+      "coder": 58.7999999999998
+    },
+    "edit:.js": {
+      "javascript-developer": 611.9999999999985,
+      "test-engineer": 48.599999999999895
+    },
+    "edit:.bak": {
+      "coder": 1.8
+    },
+    "edit:unknown": {
+      "coder": 16.200000000000017,
+      "devops-engineer": 3.599999999999999
+    },
+    "edit:.yml": {
+      "config-specialist": 7.1999999999999975,
+      "cicd-engineer": 3.599999999999999,
+      "test-engineer": 1.2
+    },
+    "edit:.png": {
+      "coder": 0.6
+    },
+    "edit:.cjs": {
+      "coder": 9
+    },
+    "edit:.py": {
+      "python-developer": 123.59999999999918,
+      "test-engineer": 0.6
+    },
+    "edit:.yaml": {
+      "config-specialist": 4.199999999999999
+    },
+    "edit:.csv": {
+      "coder": 0.6
+    },
+    "edit:.txt": {
+      "coder": 5.399999999999999
+    },
+    "edit:.patch": {
+      "coder": 1.8
+    },
+    "edit:.ini": {
+      "coder": 1.2
+    },
+    "edit:.optimized": {
+      "coder": 1.2
+    },
+    "edit:.bat": {
+      "coder": 1.2
+    },
+    "edit:.ps1": {
+      "coder": 1.2
+    },
+    "edit:.enhanced": {
+      "coder": 1.2
+    },
+    "edit:.backup": {
+      "coder": 2.4
+    },
+    "edit:.map": {
+      "coder": 313.2000000000061,
+      "test-engineer": 16.200000000000017
+    },
+    "edit:.alpha11-test": {
+      "coder": 0.6
+    },
+    "edit:.alpha12-test": {
+      "coder": 0.6
+    },
+    "edit:.local-test": {
+      "coder": 0.6
+    },
+    "edit:.npx-test": {
+      "coder": 1.2
+    },
+    "edit:.reasoningbank-test": {
+      "coder": 0.6
+    },
+    "edit:.mjs": {
+      "coder": 5.999999999999998
+    },
+    "edit:.hive-mind": {
+      "coder": 0.6
+    },
+    "edit:.test": {
+      "coder": 1.8
+    },
+    "edit:.dockerfile": {
+      "coder": 3.599999999999999
+    },
+    "edit:.Dockerfile": {
+      "coder": 0.6
+    },
+    "edit:.db": {
+      "coder": 0.6
+    },
+    "edit:.example": {
+      "coder": 3.599999999999999
+    },
+    "edit:.html": {
+      "frontend-developer": 1.8
+    },
+    "edit:.ts": {
+      "typescript-developer": 224.4000000000028,
+      "test-engineer": 36.000000000000014
+    },
+    "edit:.conf": {
+      "coder": 0.6
+    },
+    "edit:.onnx": {
+      "coder": 0.6
+    },
+    "edit:.data": {
+      "coder": 0.6
+    },
+    "edit:.sql": {
+      "database-specialist": 1.2
+    },
+    "edit:.disabled": {
+      "coder": 0.6
+    },
+    "edit:.graphql": {
+      "coder": 0.6
+    },
+    "edit:.init-test": {
+      "coder": 0.6
+    },
+    "edit:.29-test": {
+      "coder": 0.6
+    },
+    "edit:.30-test": {
+      "coder": 0.6
+    },
+    "edit:.31-test": {
+      "coder": 0.6
+    },
+    "edit:.broken": {
+      "test-engineer": 0.6
+    },
+    "command:": {
+      "success": 0.9929303495098489
+    }
+  },
+  "sequences": {},
+  "memories": [
+    {
+      "content": "[CLAUDE.md] # Claude Code Configuration - Agentic Flow  ## 🚨 CRITICAL: CONCURRENT EXECUTION & FILE MANAGEMENT  **ABSOLUTE RULES**: 1. ALL operations MUST be concurrent/parallel in a single message 2. **NEVER save working files, text/mds and tests to the root folder** 3. ALWAYS organize files in appropriate subdirectories 4. **USE CLAUDE CODE'S TASK TOOL** for spawning agents concurrently, not just MCP  ### ⚡ GOLDEN RULE: \"1 MESSAGE = ALL RELATED OPERATIONS\"  **MANDATORY PATTERNS:** - **TodoWrite**: ALWAYS ",
+      "type": "project",
+      "created": "2026-01-04T16:09:09.288Z",
+      "embedding": [
+        0.0634438783345525,
+        0.026123949902462796,
+        0.13808373519873193,
+        0.11569177813947809,
+        0.23138355627895618,
+        0.022391957059253825,
+        0.05224789980492559,
+        0.04105192127529868,
+        0.20152761353328444,
+        0.04851590696171662,
+        0.13808373519873193,
+        0.018659964216044853,
+        0.16793967794440368,
+        0.13435174235552294,
+        0.07463985686417941,
+        0.014927971372835884,
+        0.19033163500365752,
+        0.007463985686417942,
+        0.08210384255059736,
+        0.003731992843208971,
+        0.2687034847110459,
+        0.007463985686417942,
+        0.10822779245306015,
+        0.026123949902462796,
+        0.14927971372835883,
+        0.09329982108022428,
+        0.0634438783345525,
+        0.014927971372835884,
+        0.1791356564740306,
+        0.026123949902462796,
+        0.38812725569373296,
+        0.04105192127529868,
+        0.1791356564740306,
+        0.15301170657156782,
+        0.0895678282370153,
+        0.17540366363082163,
+        0.11195978529626913,
+        0.11195978529626913,
+        0.16047569225798575,
+        0.04105192127529868,
+        0.12315576382589603,
+        0.11195978529626913,
+        0.13061974951231398,
+        0.022391957059253825,
+        0.17540366363082163,
+        0.1418157280419409,
+        0.026123949902462796,
+        0.21272359206291133,
+        0.13061974951231398,
+        0.04105192127529868,
+        0.13808373519873193,
+        0.0634438783345525,
+        0.22391957059253825,
+        0.04851590696171662,
+        0.037319928432089707,
+        0.014927971372835884,
+        0.17540366363082163,
+        0.04851590696171662,
+        0.04851590696171662,
+        0.05224789980492559,
+        0.10449579960985118,
+        0.014927971372835884,
+        0.05224789980492559,
+        0.07090786402097045
+      ]
+    },
+    {
+      "content": "[.claude/settings.json] {   \"model\": \"claude-sonnet-4-20250514\",   \"customInstructions\": \"Follow the project's CLAUDE.md guidelines. Use concurrent execution for all operations.\",   \"env\": {     \"AGENTIC_FLOW_INTELLIGENCE\": \"true\",     \"AGENTIC_FLOW_LEARNING_RATE\": \"0.1\",     \"AGENTIC_FLOW_EPSILON\": \"0.1\",     \"AGENTIC_FLOW_MEMORY_BACKEND\": \"agentdb\"   },   \"permissions\": {     \"allowedTools\": [       \"Read\",       \"Write\",       \"Edit\",       \"Bash\",       \"Glob\",       \"Grep\",       \"Task\",       \"WebFetch\",       \"W",
+      "type": "project",
+      "created": "2026-01-04T16:09:09.289Z",
+      "embedding": [
+        0.15493143833976714,
+        0.019366429792470892,
+        0.12104018620294307,
+        0.04841607448117723,
+        0.2808132319908279,
+        0.03389125213682406,
+        0.12104018620294307,
+        0.009683214896235446,
+        0.13072340109917852,
+        0.06778250427364813,
+        0.07262411172176585,
+        0.038732859584941784,
+        0.20818912026906208,
+        0.1839810830284735,
+        0.08714893406611901,
+        0,
+        0.3243876990238875,
+        0,
+        0.07262411172176585,
+        0.004841607448117723,
+        0.16461465323600258,
+        0.009683214896235446,
+        0.09683214896235447,
+        0.08230732661800129,
+        0.15008983089164943,
+        0.029049644688706338,
+        0.15008983089164943,
+        0.06778250427364813,
+        0.07262411172176585,
+        0.053257681929294955,
+        0.1258817936510608,
+        0.058099289377412676,
+        0.1694562606841203,
+        0.10167375641047219,
+        0.36312055860882925,
+        0.09199054151423675,
+        0.13072340109917852,
+        0.014524822344353169,
+        0.058099289377412676,
+        0.04841607448117723,
+        0.21303072771717982,
+        0.024208037240588617,
+        0.053257681929294955,
+        0.07262411172176585,
+        0.17913947558035576,
+        0.014524822344353169,
+        0.06778250427364813,
+        0.12104018620294307,
+        0.14040661599541396,
+        0.06778250427364813,
+        0.17429786813223802,
+        0.014524822344353169,
+        0.227555550061533,
+        0.07746571916988357,
+        0.06778250427364813,
+        0.004841607448117723,
+        0.21303072771717982,
+        0.07262411172176585,
+        0.09199054151423675,
+        0.09199054151423675,
+        0.14040661599541396,
+        0.06778250427364813,
+        0.024208037240588617,
+        0.03389125213682406
+      ]
+    },
+    {
+      "content": "[CLAUDE.md] # Claude Code Configuration - Agentic Flow  ## 🚨 CRITICAL: CONCURRENT EXECUTION & FILE MANAGEMENT  **ABSOLUTE RULES**: 1. ALL operations MUST be concurrent/parallel in a single message 2. **NEVER save working files, text/mds and tests to the root folder** 3. ALWAYS organize files in appropriate subdirectories 4. **USE CLAUDE CODE'S TASK TOOL** for spawning agents concurrently, not just MCP  ### ⚡ GOLDEN RULE: \"1 MESSAGE = ALL RELATED OPERATIONS\"  **MANDATORY PATTERNS:** - **TodoWrite**: ALWAYS ",
+      "type": "project",
+      "created": "2026-01-04T16:43:00.521Z",
+      "embedding": [
+        0.0634438783345525,
+        0.026123949902462796,
+        0.13808373519873193,
+        0.11569177813947809,
+        0.23138355627895618,
+        0.022391957059253825,
+        0.05224789980492559,
+        0.04105192127529868,
+        0.20152761353328444,
+        0.04851590696171662,
+        0.13808373519873193,
+        0.018659964216044853,
+        0.16793967794440368,
+        0.13435174235552294,
+        0.07463985686417941,
+        0.014927971372835884,
+        0.19033163500365752,
+        0.007463985686417942,
+        0.08210384255059736,
+        0.003731992843208971,
+        0.2687034847110459,
+        0.007463985686417942,
+        0.10822779245306015,
+        0.026123949902462796,
+        0.14927971372835883,
+        0.09329982108022428,
+        0.0634438783345525,
+        0.014927971372835884,
+        0.1791356564740306,
+        0.026123949902462796,
+        0.38812725569373296,
+        0.04105192127529868,
+        0.1791356564740306,
+        0.15301170657156782,
+        0.0895678282370153,
+        0.17540366363082163,
+        0.11195978529626913,
+        0.11195978529626913,
+        0.16047569225798575,
+        0.04105192127529868,
+        0.12315576382589603,
+        0.11195978529626913,
+        0.13061974951231398,
+        0.022391957059253825,
+        0.17540366363082163,
+        0.1418157280419409,
+        0.026123949902462796,
+        0.21272359206291133,
+        0.13061974951231398,
+        0.04105192127529868,
+        0.13808373519873193,
+        0.0634438783345525,
+        0.22391957059253825,
+        0.04851590696171662,
+        0.037319928432089707,
+        0.014927971372835884,
+        0.17540366363082163,
+        0.04851590696171662,
+        0.04851590696171662,
+        0.05224789980492559,
+        0.10449579960985118,
+        0.014927971372835884,
+        0.05224789980492559,
+        0.07090786402097045
+      ]
+    },
+    {
+      "content": "[.claude/settings.json] {   \"model\": \"claude-sonnet-4-20250514\",   \"customInstructions\": \"Follow the project's CLAUDE.md guidelines. Use concurrent execution for all operations.\",   \"env\": {     \"AGENTIC_FLOW_INTELLIGENCE\": \"true\",     \"AGENTIC_FLOW_LEARNING_RATE\": \"0.1\",     \"AGENTIC_FLOW_EPSILON\": \"0.1\",     \"AGENTIC_FLOW_MEMORY_BACKEND\": \"agentdb\"   },   \"permissions\": {     \"allowedTools\": [       \"Read\",       \"Write\",       \"Edit\",       \"Bash\",       \"Glob\",       \"Grep\",       \"Task\",       \"WebFetch\",       \"W",
+      "type": "project",
+      "created": "2026-01-04T16:43:00.521Z",
+      "embedding": [
+        0.15500958053906438,
+        0.019376197567383048,
+        0.12110123479614404,
+        0.04844049391845762,
+        0.28095486472705417,
+        0.033908345742920336,
+        0.12110123479614404,
+        0.009688098783691524,
+        0.14047743236352708,
+        0.06781669148584067,
+        0.06781669148584067,
+        0.038752395134766096,
+        0.20829412384936777,
+        0.18407387689013896,
+        0.08719288905322371,
+        0,
+        0.32455130925366604,
+        0,
+        0.07750479026953219,
+        0.004844049391845762,
+        0.1646976793227559,
+        0.009688098783691524,
+        0.09688098783691523,
+        0.07750479026953219,
+        0.15016553114721862,
+        0.029064296351074572,
+        0.15985362993091015,
+        0.06781669148584067,
+        0.07750479026953219,
+        0.053284543310303384,
+        0.13078933357983558,
+        0.058128592702149144,
+        0.16954172871460166,
+        0.101725037228761,
+        0.3633037043884321,
+        0.09203693844506948,
+        0.12110123479614404,
+        0.014532148175537286,
+        0.058128592702149144,
+        0.043596444526611856,
+        0.203450074457522,
+        0.02422024695922881,
+        0.053284543310303384,
+        0.07266074087768642,
+        0.18407387689013896,
+        0.019376197567383048,
+        0.06781669148584067,
+        0.12110123479614404,
+        0.14532148175537285,
+        0.06781669148584067,
+        0.17438577810644743,
+        0.014532148175537286,
+        0.2276703214167508,
+        0.07266074087768642,
+        0.0629726420939949,
+        0.004844049391845762,
+        0.20829412384936777,
+        0.07266074087768642,
+        0.09203693844506948,
+        0.08719288905322371,
+        0.14047743236352708,
+        0.06781669148584067,
+        0.02422024695922881,
+        0.033908345742920336
+      ]
+    }
+  ],
+  "dirPatterns": {
+    ".claude-flow": "config-specialist",
+    ".claude-plugin": "documentation-specialist",
+    ".claude": "documentation-specialist",
+    ".githooks": "coder",
+    ".github": "documentation-specialist",
+    ".": "coder",
+    "v2": "config-specialist",
+    "v3": "documentation-specialist",
+    "./.claude-plugin/docs": "documentation-specialist",
+    "./.claude-plugin/scripts": "devops-engineer",
+    "./v2/docs": "documentation-specialist",
+    "./v2/models": "database-specialist",
+    "./v2/tests": "test-engineer",
+    "./v2/bin": "devops-engineer",
+    "./v2/scripts": "devops-engineer",
+    "./v2/src": "coder"
+  },
+  "errorPatterns": [],
+  "metrics": {
+    "totalRoutes": 102,
+    "successfulRoutes": 102,
+    "routingHistory": [
+      {
+        "timestamp": "2026-01-04T15:51:13.039Z",
+        "task": "edit:CLAUDE.md",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:10:39.332Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:14:42.587Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:14:44.685Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:14:46.853Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:14:49.010Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:14:51.234Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:15:30.884Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:15:32.978Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:16:01.096Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:16:30.402Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:20:58.751Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:21:00.930Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:21:03.059Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:22:06.899Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:23:05.066Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:31:14.169Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:31:19.366Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:31:24.589Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:31:29.930Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:31:35.147Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:34:47.995Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:43:03.511Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:43:05.687Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:45:50.500Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:46:04.305Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:46:20.482Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:46:22.933Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:46:25.089Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:46:43.252Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:47:09.235Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:47:09.519Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:47:12.833Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:48:19.171Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:48:24.626Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:49:02.019Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:49:02.110Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:49:04.208Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:49:17.020Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:49:38.112Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:49:53.118Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:50:17.033Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:50:27.768Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:52:12.598Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:52:15.541Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:53:05.114Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:53:07.280Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:53:34.386Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:54:06.199Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:54:11.177Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:54:40.518Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:54:42.796Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:54:45.746Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:55:33.772Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      },
+      {
+        "timestamp": "2026-01-04T16:56:29.172Z",
+        "task": "edit:",
+        "agent": "unknown",
+        "success": true
+      }
+    ]
+  },
+  "pretrained": {
+    "date": "2026-01-04T16:43:00.526Z",
+    "stats": {
+      "files": 7862,
+      "patterns": 7862,
+      "memories": 2,
+      "coedits": 0
+    }
+  }
+}

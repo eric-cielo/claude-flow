@@ -1,251 +1,250 @@
 #!/bin/bash
-# Claude Checkpoint Manager
-# Provides easy rollback and management of Claude Code checkpoints
+# V3 Checkpoint Manager - Automatic Git checkpointing and progress tracking
 
 set -e
 
-# Colors
+# Configuration
+CHECKPOINT_DIR=".claude-flow/checkpoints"
+METRICS_DIR=".claude-flow/metrics"
+AUTO_COMMIT_ENABLED=true
+MIN_CHANGES_THRESHOLD=1
+
+# Color codes
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
+YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+RESET='\033[0m'
 
-# Configuration
-CHECKPOINT_DIR=".claude/checkpoints"
-BACKUP_DIR=".claude/backups"
+# Ensure checkpoint directory exists
+mkdir -p "$CHECKPOINT_DIR"
 
-# Help function
-show_help() {
-    cat << EOF
-Claude Checkpoint Manager
-========================
+# Helper functions
+log_info() {
+  echo -e "${BLUE}🔄 $1${RESET}" >&2
+}
 
-Usage: $0 <command> [options]
+log_success() {
+  echo -e "${GREEN}✅ $1${RESET}" >&2
+}
 
-Commands:
-  list              List all checkpoints
-  show <id>         Show details of a specific checkpoint
-  rollback <id>     Rollback to a specific checkpoint
-  diff <id>         Show diff since checkpoint
-  clean             Clean old checkpoints (older than 7 days)
-  summary           Show session summary
-  
-Options:
-  --hard            For rollback: use git reset --hard (destructive)
-  --soft            For rollback: use git reset --soft (default)
-  --branch          For rollback: create new branch from checkpoint
+log_warning() {
+  echo -e "${YELLOW}⚠️  $1${RESET}" >&2
+}
 
-Examples:
-  $0 list
-  $0 show checkpoint-20240130-143022
-  $0 rollback checkpoint-20240130-143022 --branch
-  $0 diff session-end-session-20240130-150000
+log_error() {
+  echo -e "${RED}❌ $1${RESET}" >&2
+}
+
+# Check if we're in a git repository
+check_git_repo() {
+  if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    log_warning "Not in a git repository, skipping checkpoint"
+    exit 0
+  fi
+}
+
+# Check if there are enough changes to warrant a checkpoint
+check_changes_threshold() {
+  local changed_files=$(git status --porcelain 2>/dev/null | wc -l || echo 0)
+  if [ "$changed_files" -lt "$MIN_CHANGES_THRESHOLD" ]; then
+    log_info "Not enough changes for checkpoint ($changed_files < $MIN_CHANGES_THRESHOLD)"
+    return 1
+  fi
+  return 0
+}
+
+# Create checkpoint metadata
+create_checkpoint_metadata() {
+  local checkpoint_type="$1"
+  local message="$2"
+  local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+  local commit_hash=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
+
+  cat > "$CHECKPOINT_DIR/latest-checkpoint.json" <<EOF
+{
+  "timestamp": "$timestamp",
+  "type": "$checkpoint_type",
+  "message": "$message",
+  "commitHash": "$commit_hash",
+  "branch": "$(git branch --show-current 2>/dev/null || echo 'unknown')",
+  "v3Progress": $(cat "$METRICS_DIR/v3-progress.json" 2>/dev/null || echo '{}'),
+  "performance": $(cat "$METRICS_DIR/performance.json" 2>/dev/null || echo '{}'),
+  "security": $(cat "$METRICS_DIR/../security/audit-status.json" 2>/dev/null || echo '{}')
+}
 EOF
+
+  # Archive the checkpoint
+  local checkpoint_file="$CHECKPOINT_DIR/checkpoint-$(date +%Y%m%d-%H%M%S).json"
+  cp "$CHECKPOINT_DIR/latest-checkpoint.json" "$checkpoint_file"
+
+  log_success "Checkpoint metadata created: $checkpoint_file"
 }
 
-# List all checkpoints
-function list_checkpoints() {
-    echo -e "${BLUE}📋 Available Checkpoints:${NC}"
-    echo ""
-    
-    # List checkpoint tags
-    echo -e "${YELLOW}Git Tags:${NC}"
-    local tags=$(git tag -l 'checkpoint-*' -l 'session-end-*' -l 'task-*' --sort=-creatordate | head -20)
-    if [ -n "$tags" ]; then
-        echo "$tags"
-    else
-        echo "No checkpoint tags found"
-    fi
-    
-    echo ""
-    
-    # List checkpoint branches
-    echo -e "${YELLOW}Checkpoint Branches:${NC}"
-    local branches=$(git branch -a | grep "checkpoint/" | sed 's/^[ *]*//')
-    if [ -n "$branches" ]; then
-        echo "$branches"
-    else
-        echo "No checkpoint branches found"
-    fi
-    
-    echo ""
-    
-    # List checkpoint files
-    if [ -d "$CHECKPOINT_DIR" ]; then
-        echo -e "${YELLOW}Recent Checkpoint Files:${NC}"
-        find "$CHECKPOINT_DIR" -name "*.json" -type f -printf "%T@ %p\n" | \
-            sort -rn | head -10 | cut -d' ' -f2- | xargs -I {} basename {}
-    fi
+# Auto-commit changes if enabled
+auto_commit() {
+  local message="$1"
+
+  if [ "$AUTO_COMMIT_ENABLED" != "true" ]; then
+    log_info "Auto-commit disabled, skipping"
+    return 0
+  fi
+
+  # Check if there are changes to commit
+  if git diff --quiet && git diff --cached --quiet; then
+    log_info "No changes to commit"
+    return 0
+  fi
+
+  # Add all changes
+  git add . >/dev/null 2>&1 || true
+
+  # Create commit with enhanced message
+  local enhanced_message="$message
+
+🚀 Generated with [Claude Code](https://claude.com/claude-code)
+📊 V3 Development Progress Checkpoint
+
+Co-Authored-By: Claude Sonnet 4 <noreply@anthropic.com>"
+
+  if git commit -m "$enhanced_message" >/dev/null 2>&1; then
+    local commit_hash=$(git rev-parse HEAD)
+    log_success "Auto-commit created: ${commit_hash:0:7}"
+  else
+    log_info "No changes to commit or commit failed"
+  fi
 }
 
-# Show checkpoint details
-function show_checkpoint() {
-    local checkpoint_id="$1"
-    
-    echo -e "${BLUE}📍 Checkpoint Details: $checkpoint_id${NC}"
-    echo ""
-    
-    # Check if it's a tag
-    if git tag -l "$checkpoint_id" | grep -q "$checkpoint_id"; then
-        echo -e "${YELLOW}Type:${NC} Git Tag"
-        echo -e "${YELLOW}Commit:${NC} $(git rev-list -n 1 "$checkpoint_id")"
-        echo -e "${YELLOW}Date:${NC} $(git log -1 --format=%ai "$checkpoint_id")"
-        echo -e "${YELLOW}Message:${NC}"
-        git log -1 --format=%B "$checkpoint_id" | sed 's/^/  /'
-        echo ""
-        echo -e "${YELLOW}Files changed:${NC}"
-        git diff-tree --no-commit-id --name-status -r "$checkpoint_id" | sed 's/^/  /'
-    # Check if it's a branch
-    elif git branch -a | grep -q "$checkpoint_id"; then
-        echo -e "${YELLOW}Type:${NC} Git Branch"
-        echo -e "${YELLOW}Latest commit:${NC}"
-        git log -1 --oneline "$checkpoint_id"
-    else
-        echo -e "${RED}❌ Checkpoint not found: $checkpoint_id${NC}"
-        exit 1
-    fi
-}
+# Main checkpoint function
+create_checkpoint() {
+  local checkpoint_type="$1"
+  local message="$2"
 
-# Rollback to checkpoint
-function rollback_checkpoint() {
-    local checkpoint_id="$1"
-    local mode="$2"
-    
-    echo -e "${YELLOW}🔄 Rolling back to checkpoint: $checkpoint_id${NC}"
-    echo ""
-    
-    # Verify checkpoint exists
-    if ! git tag -l "$checkpoint_id" | grep -q "$checkpoint_id" && \
-       ! git branch -a | grep -q "$checkpoint_id"; then
-        echo -e "${RED}❌ Checkpoint not found: $checkpoint_id${NC}"
-        exit 1
-    fi
-    
-    # Create backup before rollback
-    local backup_name="backup-$(date +%Y%m%d-%H%M%S)"
-    echo "Creating backup: $backup_name"
-    git tag "$backup_name" -m "Backup before rollback to $checkpoint_id"
-    
-    case "$mode" in
-        "--hard")
-            echo -e "${RED}⚠️  Performing hard reset (destructive)${NC}"
-            git reset --hard "$checkpoint_id"
-            echo -e "${GREEN}✅ Rolled back to $checkpoint_id (hard reset)${NC}"
-            ;;
-        "--branch")
-            local branch_name="rollback-$checkpoint_id-$(date +%Y%m%d-%H%M%S)"
-            echo "Creating new branch: $branch_name"
-            git checkout -b "$branch_name" "$checkpoint_id"
-            echo -e "${GREEN}✅ Created branch $branch_name from $checkpoint_id${NC}"
-            ;;
-        "--stash"|*)
-            echo "Stashing current changes..."
-            git stash push -m "Stash before rollback to $checkpoint_id"
-            git reset --soft "$checkpoint_id"
-            echo -e "${GREEN}✅ Rolled back to $checkpoint_id (soft reset)${NC}"
-            echo "Your changes are stashed. Use 'git stash pop' to restore them."
-            ;;
-    esac
-}
+  check_git_repo
 
-# Show diff since checkpoint
-function diff_checkpoint() {
-    local checkpoint_id="$1"
-    
-    echo -e "${BLUE}📊 Changes since checkpoint: $checkpoint_id${NC}"
-    echo ""
-    
-    if git tag -l "$checkpoint_id" | grep -q "$checkpoint_id"; then
-        git diff "$checkpoint_id"
-    elif git branch -a | grep -q "$checkpoint_id"; then
-        git diff "$checkpoint_id"
-    else
-        echo -e "${RED}❌ Checkpoint not found: $checkpoint_id${NC}"
-        exit 1
-    fi
-}
+  case "$checkpoint_type" in
+    "auto-checkpoint")
+      if check_changes_threshold; then
+        log_info "Creating auto-checkpoint: $message"
+        create_checkpoint_metadata "$checkpoint_type" "$message"
+        auto_commit "checkpoint: $message"
+      fi
+      ;;
 
-# Clean old checkpoints
-function clean_checkpoints() {
-    local days=${1:-7}
-    
-    echo -e "${YELLOW}🧹 Cleaning checkpoints older than $days days...${NC}"
-    echo ""
-    
-    # Clean old checkpoint files
-    if [ -d "$CHECKPOINT_DIR" ]; then
-        find "$CHECKPOINT_DIR" -name "*.json" -type f -mtime +$days -delete
-        echo "✅ Cleaned old checkpoint files"
-    fi
-    
-    # List old tags (but don't delete automatically)
-    echo ""
-    echo "Old checkpoint tags (manual deletion required):"
-    git tag -l 'checkpoint-*' --sort=-creatordate | tail -n +50 || echo "No old tags found"
-}
+    "agent-checkpoint")
+      log_info "Creating agent checkpoint: $message"
+      create_checkpoint_metadata "$checkpoint_type" "$message"
+      auto_commit "feat(agent): $message"
+      ;;
 
-# Show session summary
-function show_summary() {
-    echo -e "${BLUE}📊 Session Summary${NC}"
-    echo ""
-    
-    # Find most recent session summary
-    if [ -d "$CHECKPOINT_DIR" ]; then
-        local latest_summary=$(find "$CHECKPOINT_DIR" -name "summary-*.md" -type f -printf "%T@ %p\n" | \
-            sort -rn | head -1 | cut -d' ' -f2-)
-        
-        if [ -n "$latest_summary" ]; then
-            echo -e "${YELLOW}Latest session summary:${NC}"
-            cat "$latest_summary"
-        else
-            echo "No session summaries found"
-        fi
-    fi
-}
+    "domain-checkpoint")
+      log_info "Creating domain checkpoint: $message"
+      create_checkpoint_metadata "$checkpoint_type" "$message"
+      auto_commit "feat(domain): $message"
+      ;;
 
-# Main command handling
-case "$1" in
-    list)
-        list_checkpoints
-        ;;
-    show)
-        if [ -z "$2" ]; then
-            echo -e "${RED}Error: Please specify a checkpoint ID${NC}"
-            show_help
-            exit 1
-        fi
-        show_checkpoint "$2"
-        ;;
-    rollback)
-        if [ -z "$2" ]; then
-            echo -e "${RED}Error: Please specify a checkpoint ID${NC}"
-            show_help
-            exit 1
-        fi
-        rollback_checkpoint "$2" "$3"
-        ;;
-    diff)
-        if [ -z "$2" ]; then
-            echo -e "${RED}Error: Please specify a checkpoint ID${NC}"
-            show_help
-            exit 1
-        fi
-        diff_checkpoint "$2"
-        ;;
-    clean)
-        clean_checkpoints "$2"
-        ;;
-    summary)
-        show_summary
-        ;;
-    help|--help|-h)
-        show_help
-        ;;
+    "security-checkpoint")
+      log_info "Creating security checkpoint: $message"
+      create_checkpoint_metadata "$checkpoint_type" "$message"
+      auto_commit "security: $message"
+      ;;
+
+    "performance-checkpoint")
+      log_info "Creating performance checkpoint: $message"
+      create_checkpoint_metadata "$checkpoint_type" "$message"
+      auto_commit "perf: $message"
+      ;;
+
+    "session-end")
+      log_info "Creating session-end checkpoint"
+      create_checkpoint_metadata "$checkpoint_type" "$message"
+      auto_commit "checkpoint: session completed - $message"
+
+      # Generate session summary
+      if [ -f "$METRICS_DIR/v3-progress.json" ]; then
+        local domains=$(jq -r '.domains.completed // 0' "$METRICS_DIR/v3-progress.json")
+        local agents=$(jq -r '.swarm.activeAgents // 0' "$METRICS_DIR/v3-progress.json")
+        local ddd=$(jq -r '.ddd.progress // 0' "$METRICS_DIR/v3-progress.json")
+
+        echo "📊 Session Summary: $domains/5 domains, $agents/15 agents, $ddd% DDD progress" > "$CHECKPOINT_DIR/last-session-summary.txt"
+      fi
+      ;;
+
+    "milestone-checkpoint")
+      log_info "Creating milestone checkpoint: $message"
+      create_checkpoint_metadata "$checkpoint_type" "$message"
+      auto_commit "milestone: $message"
+      ;;
+
     *)
-        echo -e "${RED}Error: Unknown command: $1${NC}"
-        echo ""
-        show_help
-        exit 1
-        ;;
+      log_error "Unknown checkpoint type: $checkpoint_type"
+      exit 1
+      ;;
+  esac
+}
+
+# Show checkpoint history
+show_history() {
+  echo -e "${PURPLE}📚 Recent Checkpoints${RESET}"
+  echo "===================="
+
+  if [ ! -d "$CHECKPOINT_DIR" ] || [ -z "$(ls -A "$CHECKPOINT_DIR"/*.json 2>/dev/null)" ]; then
+    echo "No checkpoints found"
+    return
+  fi
+
+  for checkpoint in $(ls -t "$CHECKPOINT_DIR"/checkpoint-*.json 2>/dev/null | head -5); do
+    local timestamp=$(jq -r '.timestamp' "$checkpoint" 2>/dev/null || echo "unknown")
+    local type=$(jq -r '.type' "$checkpoint" 2>/dev/null || echo "unknown")
+    local message=$(jq -r '.message' "$checkpoint" 2>/dev/null || echo "unknown")
+    local commit=$(jq -r '.commitHash' "$checkpoint" 2>/dev/null | cut -c1-7 || echo "unknown")
+
+    echo -e "${CYAN}$timestamp${RESET} [$type] $message (${commit})"
+  done
+}
+
+# Main script logic
+case "$1" in
+  "auto-checkpoint"|"agent-checkpoint"|"domain-checkpoint"|"security-checkpoint"|"performance-checkpoint"|"session-end"|"milestone-checkpoint")
+    create_checkpoint "$1" "${2:-Auto checkpoint}"
+    ;;
+
+  "history")
+    show_history
+    ;;
+
+  "status")
+    if [ -f "$CHECKPOINT_DIR/latest-checkpoint.json" ]; then
+      echo -e "${BLUE}📋 Latest Checkpoint${RESET}"
+      echo "==================="
+      jq -r '"Timestamp: " + .timestamp + "\nType: " + .type + "\nMessage: " + .message + "\nCommit: " + .commitHash' "$CHECKPOINT_DIR/latest-checkpoint.json" 2>/dev/null || echo "Error reading checkpoint"
+    else
+      echo "No checkpoints found"
+    fi
+    ;;
+
+  *)
+    echo "V3 Checkpoint Manager"
+    echo "===================="
+    echo ""
+    echo "Usage: $0 <command> [options]"
+    echo ""
+    echo "Commands:"
+    echo "  auto-checkpoint [message]        Create automatic checkpoint"
+    echo "  agent-checkpoint [message]       Create agent milestone checkpoint"
+    echo "  domain-checkpoint [message]      Create domain completion checkpoint"
+    echo "  security-checkpoint [message]    Create security fix checkpoint"
+    echo "  performance-checkpoint [message] Create performance improvement checkpoint"
+    echo "  session-end [message]            Create session end checkpoint"
+    echo "  milestone-checkpoint [message]   Create major milestone checkpoint"
+    echo "  history                          Show recent checkpoint history"
+    echo "  status                           Show latest checkpoint info"
+    echo ""
+    echo "Examples:"
+    echo "  $0 auto-checkpoint \"Updated statusline configuration\""
+    echo "  $0 domain-checkpoint \"Completed task-management domain\""
+    echo "  $0 agent-checkpoint \"Deployed 8 agents successfully\""
+    ;;
 esac

@@ -1,0 +1,51 @@
+{
+  "name": "claude-flow-v3",
+  "version": "3.0.0-alpha.1",
+  "description": "Claude Flow V3 - Domain-Driven Design Architecture with 15-Agent Swarm Coordination",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "lint": "eslint src/**/*.ts",
+    "security:audit": "npm audit --audit-level high",
+    "v3:domains": "npm run build:domains",
+    "v3:swarm": "npm run start:swarm",
+    "v3:security": "npm run security:audit"
+  },
+  "dependencies": {
+    "agentic-flow": "alpha",
+    "@claude-flow/security": "^3.0.0-alpha.1",
+    "@claude-flow/memory": "^3.0.0-alpha.1",
+    "@claude-flow/integration": "^3.0.0-alpha.1",
+    "@claude-flow/performance": "^3.0.0-alpha.1",
+    "@claude-flow/swarm": "^3.0.0-alpha.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0",
+    "eslint": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/claude-flow.git"
+  },
+  "keywords": [
+    "claude",
+    "ai",
+    "agents",
+    "swarm",
+    "ddd",
+    "domain-driven-design",
+    "v3"
+  ],
+  "author": "RuvNet",
+  "license": "MIT"
+}

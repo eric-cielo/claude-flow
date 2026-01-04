@@ -1,6 +1,24 @@
 {
   "model": "claude-sonnet-4-20250514",
-  "customInstructions": "Follow the project's CLAUDE.md guidelines",
+  "customInstructions": "Follow the project's CLAUDE.md guidelines. Use concurrent execution for all operations. Prioritize v3 implementation with security-first development, 15-agent swarm coordination, and phased performance optimization.",
+  "env": {
+    "AGENTIC_FLOW_INTELLIGENCE": "true",
+    "AGENTIC_FLOW_LEARNING_RATE": "0.05",
+    "AGENTIC_FLOW_EPSILON": "0.1",
+    "AGENTIC_FLOW_MEMORY_BACKEND": "agentdb",
+    "AGENTIC_FLOW_V3_MODE": "true",
+    "AGENTIC_FLOW_SWARM_SIZE": "15",
+    "AGENTIC_FLOW_TOPOLOGY": "hierarchical",
+    "AGENTIC_FLOW_SECURITY_FIRST": "true",
+    "AGENTIC_FLOW_PERFORMANCE_TIER": "standard",
+    "AGENTIC_FLOW_LEARNING_TIER": "standard",
+    "AGENTIC_FLOW_PRETRAIN_ENABLED": "true",
+    "AGENTIC_FLOW_SONA_ENABLED": "true",
+    "AGENTIC_FLOW_HNSW_ENABLED": "true",
+    "AGENTIC_FLOW_MOE_ATTENTION": "true",
+    "AGENTIC_FLOW_MULTI_ALGORITHM_RL": "true",
+    "AGENTIC_FLOW_COMPRESSION_ENABLED": "true"
+  },
   "permissions": {
     "allowedTools": [
       "Read",
@@ -11,52 +29,185 @@
       "Grep",
       "Task",
       "WebFetch",
-      "WebSearch"
+      "WebSearch",
+      "TodoWrite",
+      "LSP",
+      "NotebookEdit"
     ],
-    "deniedTools": []
+    "deniedTools": [],
+    "allow": [
+      "Bash(npx:*)",
+      "Bash(agentic-flow:*)",
+      "Bash(npm run:*)",
+      "mcp__agentic-flow",
+      "mcp__claude-flow",
+      "mcp__ruv-swarm"
+    ]
+  },
+  "checkpointManager": {
+    "enabled": true,
+    "autoCommit": true,
+    "commitMessage": "checkpoint: V3 development progress",
+    "frequency": "after-significant-change",
+    "includeMetrics": true
+  },
+  "githubIntegration": {
+    "enabled": true,
+    "features": {
+      "autoCommit": true,
+      "prTracking": true,
+      "issueManagement": true,
+      "progressReporting": true
+    }
   },
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": {
-          "tools": [
-            "Edit",
-            "Write",
-            "MultiEdit"
-          ]
-        },
+        "matcher": "Edit|Write|MultiEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "npx agentic-flow@alpha hooks pre-edit"
+            "timeout": 5000,
+            "command": "npx agentic-flow@alpha hooks pre-edit \"$TOOL_INPUT_file_path\" --v3-mode --security-check --pattern-lookup --checkpoint-prep 2>/dev/null || true"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 3000,
+            "command": "npx agentic-flow@alpha hooks pre-command \"$TOOL_INPUT_command\" --v3-mode --risk-assessment --suggest-optimization --git-check 2>/dev/null || true"
+          }
+        ]
+      },
+      {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2000,
+            "command": "npx agentic-flow@alpha hooks route \"$TOOL_INPUT_prompt\" --agent-suggest --v3-swarm --checkpoint-task 2>/dev/null || true"
           }
         ]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": {
-          "tools": [
-            "Edit",
-            "Write",
-            "MultiEdit"
-          ]
-        },
+        "matcher": "Edit|Write|MultiEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "npx agentic-flow@alpha hooks post-edit"
+            "timeout": 5000,
+            "command": "npx agentic-flow@alpha hooks post-edit \"$TOOL_INPUT_file_path\" --success --learn --extract-patterns --v3-mode 2>/dev/null || true"
+          },
+          {
+            "type": "command",
+            "timeout": 3000,
+            "command": ".claude/helpers/checkpoint-manager.sh auto-checkpoint \"File edit: $TOOL_INPUT_file_path\" 2>/dev/null || true"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 3000,
+            "command": "npx agentic-flow@alpha hooks post-command \"$TOOL_INPUT_command\" --success --learn --performance-metrics --v3-mode 2>/dev/null || true"
+          }
+        ]
+      },
+      {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2000,
+            "command": "npx agentic-flow@alpha hooks metrics --agent-performance --swarm-efficiency 2>/dev/null || true"
+          },
+          {
+            "type": "command",
+            "timeout": 4000,
+            "command": ".claude/helpers/checkpoint-manager.sh agent-checkpoint \"Task completed: $TOOL_INPUT_prompt\" 2>/dev/null || true"
           }
         ]
       }
     ],
-    "Notification": [
+    "PostToolUseFailure": [
       {
-        "matcher": {},
+        "matcher": "Edit|Write|MultiEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "npx agentic-flow@alpha hooks notify"
+            "timeout": 5000,
+            "command": "npx agentic-flow@alpha hooks post-edit \"$TOOL_INPUT_file_path\" --fail --error \"$ERROR_MESSAGE\" --learn-failure --pattern-analysis 2>/dev/null || true"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 3000,
+            "command": "npx agentic-flow@alpha hooks post-command \"$TOOL_INPUT_command\" --fail --error \"$ERROR_MESSAGE\" --learn-failure --suggest-fix 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 5000,
+            "command": "npx agentic-flow@alpha hooks intelligence stats --json --v3-mode --load-v3-patterns 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 8000,
+            "command": "npx agentic-flow@alpha hooks metrics --session --json --export-patterns --consolidate-learning --v3-summary 2>/dev/null || true"
+          },
+          {
+            "type": "command",
+            "timeout": 6000,
+            "command": ".claude/helpers/checkpoint-manager.sh session-end \"V3 development session completed\" 2>/dev/null || true"
+          },
+          {
+            "type": "command",
+            "timeout": 4000,
+            "command": ".claude/helpers/update-v3-progress.sh status > .claude-flow/last-session-status.txt 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 4000,
+            "command": "npx agentic-flow@alpha hooks route \"$USER_PROMPT\" --json --v3-agents --swarm-coordination --confidence-threshold 0.8 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 5000,
+            "command": "npx agentic-flow@alpha hooks metrics --session --final-consolidation --export-learned-patterns 2>/dev/null || true"
           }
         ]
       }
@@ -70,14 +221,43 @@
     "source": ".claude/commands",
     "enabled": true
   },
-  "statusline": {
+  "helpers": {
+    "directory": ".claude/helpers",
     "enabled": true,
-    "components": [
-      "model",
-      "tokens",
-      "cost",
-      "time"
-    ]
+    "scripts": {
+      "v3ProgressUpdater": ".claude/helpers/update-v3-progress.sh",
+      "v3ConfigValidator": ".claude/helpers/validate-v3-config.sh",
+      "v3QuickStatus": ".claude/helpers/v3-quick-status.sh",
+      "v3CheckpointManager": ".claude/helpers/checkpoint-manager.sh",
+      "v3Master": ".claude/helpers/v3.sh"
+    }
+  },
+  "v3Configuration": {
+    "domains": {
+      "total": 5,
+      "names": ["task-management", "session-management", "health-monitoring", "lifecycle-management", "event-coordination"],
+      "sourceDir": "src/domains"
+    },
+    "swarm": {
+      "totalAgents": 15,
+      "topology": "hierarchical-mesh",
+      "coordination": "queen-led"
+    },
+    "performance": {
+      "flashAttentionTarget": "2.49x-7.47x",
+      "memoryReductionTarget": "50-75%",
+      "searchImprovementTarget": "150x-12,500x",
+      "codebaseReductionTarget": "10,000+ lines"
+    },
+    "security": {
+      "criticalCves": 3,
+      "securityFirst": true,
+      "auditRequired": true
+    }
+  },
+  "statusLine": {
+    "type": "command",
+    "command": ".claude/statusline.sh"
   },
   "mcpServers": {
     "claude-flow": {
