@@ -527,12 +527,14 @@ describe('CLI', () => {
 
     it('should exit with custom code from command result', async () => {
       let actionCalled = false;
+      let returnedResult: { success: boolean; exitCode: number } | null = null;
       const mockCommand: Command = {
-        name: 'testexit',
-        description: 'Test command',
+        name: 'testexitcode',
+        description: 'Test command for exit code',
         action: async () => {
           actionCalled = true;
-          return { success: false, exitCode: 42 };
+          returnedResult = { success: false, exitCode: 42 };
+          return returnedResult;
         }
       };
 
@@ -540,24 +542,17 @@ describe('CLI', () => {
 
       let errorMessage = '';
       try {
-        await cli.run(['testexit']);
+        await cli.run(['testexitcode']);
       } catch (e) {
         errorMessage = (e as Error).message;
       }
 
-      // If action was called, we expect exit code 42
-      // If action was NOT called, there was an earlier failure
-      if (actionCalled) {
-        expect(errorMessage).toContain('process.exit: 42');
-      } else {
-        // Action wasn't called - check if config loading failed silently
-        // In test environment, this is acceptable - just verify the command was found
-        const allOutput = [...consoleOutput, ...consoleErrorOutput].join('');
-        // If unknown command error, that's a real failure
-        expect(allOutput).not.toContain('Unknown command');
-        // Otherwise, accept that config loading may fail in test env
-        expect(errorMessage).toContain('process.exit');
-      }
+      // Verify the action was called and returned the expected result
+      expect(actionCalled).toBe(true);
+      expect(returnedResult).toEqual({ success: false, exitCode: 42 });
+
+      // Now check exit code
+      expect(errorMessage).toContain('process.exit: 42');
     });
   });
 });
