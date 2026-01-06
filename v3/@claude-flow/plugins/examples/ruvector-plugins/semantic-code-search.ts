@@ -27,9 +27,12 @@ import {
   Security,
 } from '../../src/index.js';
 
-// Import @ruvector/wasm for production HNSW vector database
-// @ts-expect-error - @ruvector/wasm types may not be available
-import { VectorDB as RuVectorDB } from '@ruvector/wasm';
+// Import shared vector utilities (consolidated from all plugins)
+import {
+  IVectorDB,
+  createVectorDB,
+  generateHashEmbedding,
+} from './shared/vector-utils.js';
 
 // ============================================================================
 // Types
