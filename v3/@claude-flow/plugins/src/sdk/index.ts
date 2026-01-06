@@ -10,7 +10,6 @@
  * - MCP tools
  */
 
-import { EventEmitter } from 'events';
 import type {
   PluginMetadata,
   PluginContext,
