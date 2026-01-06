@@ -19,16 +19,20 @@
 
 Claude-Flow is a comprehensive AI agent orchestration framework that transforms Claude Code into a powerful multi-agent development platform. It enables teams to deploy, coordinate, and optimize specialized AI agents working together on complex software engineering tasks.
 
-### What Makes Claude-Flow Different
+### Claude Code: With vs Without Claude-Flow
 
-| Capability | Traditional Agents | Claude-Flow v3 |
-|------------|-------------------|----------------|
-| **Agent Coordination** | Single agent, sequential | 15 concurrent agents, 6 swarm topologies |
-| **Learning** | Static prompts | Self-learning with HNSW (150x faster retrieval) |
-| **Fault Tolerance** | None | Byzantine, Raft, Gossip, CRDT consensus |
-| **Memory** | Session-only | Persistent AgentDB with vector search |
-| **Performance** | Baseline | 2.8-4.4x speed improvement |
-| **Security** | Basic | CVE-hardened, input validation, sandboxing |
+| Capability | Claude Code Alone | Claude Code + Claude-Flow |
+|------------|-------------------|---------------------------|
+| **Agents** | 1 general-purpose agent | 54+ specialized agents (coder, tester, reviewer, security, DevOps...) |
+| **Parallelism** | Sequential tasks only | 15 agents working simultaneously |
+| **Memory** | Forgets between sessions | Remembers patterns, learns what works, improves over time |
+| **Complex Tasks** | Manual breakdown required | Automatic task decomposition across agent teams |
+| **Code Review** | Single-pass review | Multi-agent review (security + performance + style + tests) |
+| **Testing** | Write tests when asked | Automatic test generation with TDD patterns |
+| **LLM Provider** | Anthropic only | Claude, GPT-4, Gemini, Cohere, Ollama (with cost optimization) |
+| **Failure Handling** | Restart from scratch | Automatic recovery, task retry, agent failover |
+| **Security** | Standard protections | CVE-hardened, sandboxed commands, validated inputs |
+| **Speed** | Baseline | 2.8-4.4x faster on complex tasks |
 
 ### Key Capabilities
 
