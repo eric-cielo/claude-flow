@@ -13,8 +13,8 @@
 ## Features
 
 ### Core Capabilities
-- **26 Main Commands** - Complete CLI coverage for all Claude Flow operations
-- **140+ Subcommands** - Fine-grained control over every aspect of the system
+- **29 Main Commands** - Complete CLI coverage for all Claude Flow operations
+- **170+ Subcommands** - Fine-grained control over every aspect of the system
 - **Advanced Argument Parsing** - Full support for flags, options, subcommands, and positional arguments
 - **Interactive Prompts** - Rich interactive mode with confirmations, selections, and input validation
 - **Beautiful Output** - Colored output, tables, progress bars, spinners, and multiple formats (text, JSON, table)
