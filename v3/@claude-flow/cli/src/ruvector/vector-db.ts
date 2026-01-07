@@ -209,38 +209,6 @@ export async function loadRuVector(): Promise<boolean> {
 }
 
 /**
- * Generate a simple hash-based embedding (internal helper)
- */
-function generateHashEmbedding(text: string, dimensions: number = 768): Float32Array {
-  const embedding = new Float32Array(dimensions);
-  const normalized = text.toLowerCase().trim();
-
-  // Simple hash function
-  let hash = 0;
-  for (let i = 0; i < normalized.length; i++) {
-    hash = ((hash << 5) - hash) + normalized.charCodeAt(i);
-    hash = hash & hash; // Convert to 32bit integer
-  }
-
-  // Generate pseudo-random embedding based on hash
-  for (let i = 0; i < dimensions; i++) {
-    embedding[i] = Math.sin(hash * (i + 1) * 0.001) * 0.5 + 0.5;
-  }
-
-  // Normalize
-  let norm = 0;
-  for (let i = 0; i < dimensions; i++) {
-    norm += embedding[i] * embedding[i];
-  }
-  norm = Math.sqrt(norm);
-  for (let i = 0; i < dimensions; i++) {
-    embedding[i] /= norm;
-  }
-
-  return embedding;
-}
-
-/**
  * Check if ruvector is available
  */
 export function isRuVectorAvailable(): boolean {
