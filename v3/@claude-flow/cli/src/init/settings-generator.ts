@@ -93,7 +93,7 @@ function generateStatusLineConfig(options: InitOptions): object {
 function generateHooksConfig(config: HooksConfig): object {
   const hooks: Record<string, unknown[]> = {};
 
-  // PreToolUse hooks
+  // PreToolUse hooks - using cross-platform Node.js helpers
   if (config.preToolUse) {
     hooks.PreToolUse = [
       // File edit hooks with intelligence routing
@@ -102,7 +102,7 @@ function generateHooksConfig(config: HooksConfig): object {
         hooks: [
           {
             type: 'command',
-            command: 'npx @claude-flow/cli@latest hooks pre-edit --file "$TOOL_INPUT_file_path" --intelligence 2>/dev/null || true',
+            command: 'node .claude/helpers/hooks.mjs pre-edit --file "$TOOL_INPUT_file_path" --intelligence',
             timeout: config.timeout,
             continueOnError: config.continueOnError,
           },
@@ -114,7 +114,7 @@ function generateHooksConfig(config: HooksConfig): object {
         hooks: [
           {
             type: 'command',
-            command: 'npx @claude-flow/cli@latest hooks pre-command --command "$TOOL_INPUT_command" --validate-safety 2>/dev/null || true',
+            command: 'node .claude/helpers/hooks.mjs pre-command --command "$TOOL_INPUT_command" --validate-safety',
             timeout: config.timeout,
             continueOnError: config.continueOnError,
           },
@@ -126,7 +126,7 @@ function generateHooksConfig(config: HooksConfig): object {
         hooks: [
           {
             type: 'command',
-            command: 'npx @claude-flow/cli@latest hooks pre-task --task-id "task-$(date +%s)" --description "$TOOL_INPUT_prompt" 2>/dev/null || true',
+            command: 'node .claude/helpers/hooks.mjs pre-task --description "$TOOL_INPUT_prompt"',
             timeout: config.timeout,
             continueOnError: config.continueOnError,
           },
@@ -138,7 +138,7 @@ function generateHooksConfig(config: HooksConfig): object {
         hooks: [
           {
             type: 'command',
-            command: 'npx @claude-flow/cli@latest hooks pre-search --pattern "$TOOL_INPUT_pattern" 2>/dev/null || true',
+            command: 'node .claude/helpers/hooks.mjs pre-search --pattern "$TOOL_INPUT_pattern"',
             timeout: 2000,
             continueOnError: config.continueOnError,
           },
