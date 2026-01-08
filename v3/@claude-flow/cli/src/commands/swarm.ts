@@ -300,6 +300,26 @@ const initCommand: Command = {
       output.writeln();
       output.printSuccess('Swarm initialized successfully');
 
+      // Save swarm state locally for status command to read
+      const swarmDir = path.join(process.cwd(), '.swarm');
+      try {
+        if (!fs.existsSync(swarmDir)) {
+          fs.mkdirSync(swarmDir, { recursive: true });
+        }
+        const stateFile = path.join(swarmDir, 'state.json');
+        fs.writeFileSync(stateFile, JSON.stringify({
+          id: result.swarmId,
+          topology: result.topology,
+          maxAgents: result.config.maxAgents,
+          strategy: ctx.flags.strategy || 'development',
+          v3Mode,
+          initializedAt: result.initializedAt,
+          status: 'ready'
+        }, null, 2));
+      } catch {
+        // Ignore errors writing state file
+      }
+
       if (ctx.flags.format === 'json') {
         output.printJson(result);
       }
