@@ -4,18 +4,18 @@
 
 **When starting work on complex tasks, Claude Code MUST automatically:**
 
-1. **Initialize the swarm** using MCP tools
+1. **Initialize the swarm** using CLI tools via Bash
 2. **Spawn concurrent agents** using Claude Code's Task tool
 3. **Coordinate via hooks** and memory
 
-### 🚨 CRITICAL: MCP + Task Tool in SAME Message
+### 🚨 CRITICAL: CLI + Task Tool in SAME Message
 
 **When user says "spawn swarm" or requests complex work, Claude Code MUST in ONE message:**
-1. Call MCP tools to initialize coordination
+1. Call CLI tools via Bash to initialize coordination
 2. **IMMEDIATELY** call Task tool to spawn REAL working agents
-3. Both MCP and Task calls must be in the SAME response
+3. Both CLI and Task calls must be in the SAME response
 
-**MCP alone does NOT execute work - Task tool agents do the actual work!**
+**CLI coordinates, Task tool agents do the actual work!**
 
 ### 🔄 Auto-Start Swarm Protocol
 
