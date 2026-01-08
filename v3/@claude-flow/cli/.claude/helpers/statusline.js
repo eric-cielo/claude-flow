@@ -78,7 +78,7 @@ function getLearningStats() {
         // Count entries in memory file (rough estimate from file size)
         const stats = fs.statSync(dbPath);
         const sizeKB = stats.size / 1024;
-        // Estimate: ~1KB per pattern on average
+        // Estimate: ~2KB per pattern on average
         patterns = Math.floor(sizeKB / 2);
         sessions = Math.max(1, Math.floor(patterns / 10));
         trajectories = Math.floor(patterns / 5);
@@ -103,7 +103,7 @@ function getLearningStats() {
   return { patterns, sessions, trajectories };
 }
 
-// Get V3 progress from learning state (not hardcoded)
+// Get V3 progress from learning state (grows as system learns)
 function getV3Progress() {
   const learning = getLearningStats();
 
@@ -186,7 +186,7 @@ function getSwarmStatus() {
   };
 }
 
-// Get system metrics (all dynamic, no hardcoded values)
+// Get system metrics (dynamic based on actual state)
 function getSystemMetrics() {
   let memoryMB = 0;
   let subAgents = 0;

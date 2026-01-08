@@ -4,58 +4,151 @@
 
 **When starting work on complex tasks, Claude Code MUST automatically:**
 
-1. **Initialize the swarm** using MCP tools
+1. **Initialize the swarm** using CLI tools via Bash
 2. **Spawn concurrent agents** using Claude Code's Task tool
 3. **Coordinate via hooks** and memory
 
-### 🚨 CRITICAL: MCP + Task Tool in SAME Message
+### 🚨 CRITICAL: CLI + Task Tool in SAME Message
 
 **When user says "spawn swarm" or requests complex work, Claude Code MUST in ONE message:**
-1. Call MCP tools to initialize coordination
+1. Call CLI tools via Bash to initialize coordination
 2. **IMMEDIATELY** call Task tool to spawn REAL working agents
-3. Both MCP and Task calls must be in the SAME response
+3. Both CLI and Task calls must be in the SAME response
 
-**MCP alone does NOT execute work - Task tool agents do the actual work!**
+**CLI coordinates, Task tool agents do the actual work!**
 
-### 🔄 Auto-Start Swarm Protocol
+### 🔄 Auto-Start Swarm Protocol (Background Execution)
 
-When the user requests a complex task (multi-file changes, feature implementation, refactoring), **immediately execute this pattern in a SINGLE message:**
+When the user requests a complex task, **spawn agents in background and WAIT for completion:**
 
 ```javascript
-// STEP 1: Initialize swarm coordination via MCP (in parallel with agent spawning)
-mcp__claude-flow__swarm_init({
-  topology: "hierarchical",
-  maxAgents: 15,
-  strategy: "adaptive"
+// STEP 1: Initialize swarm coordination
+Bash("npx @claude-flow/cli@latest swarm init --topology hierarchical-mesh --max-agents 15")
+
+// STEP 2: Spawn ALL agents IN BACKGROUND in a SINGLE message
+// Use run_in_background: true so agents work concurrently
+Task({
+  prompt: "Research requirements, analyze codebase patterns, store findings in memory",
+  subagent_type: "researcher",
+  description: "Research phase",
+  run_in_background: true  // ← CRITICAL: Run in background
+})
+Task({
+  prompt: "Design architecture based on research. Document decisions.",
+  subagent_type: "system-architect",
+  description: "Architecture phase",
+  run_in_background: true
+})
+Task({
+  prompt: "Implement the solution following the design. Write clean code.",
+  subagent_type: "coder",
+  description: "Implementation phase",
+  run_in_background: true
+})
+Task({
+  prompt: "Write comprehensive tests for the implementation.",
+  subagent_type: "tester",
+  description: "Testing phase",
+  run_in_background: true
+})
+Task({
+  prompt: "Review code quality, security, and best practices.",
+  subagent_type: "reviewer",
+  description: "Review phase",
+  run_in_background: true
 })
 
-// STEP 2: Spawn agents concurrently using Claude Code's Task tool
-// ALL Task calls MUST be in the SAME message for parallel execution
-Task("Coordinator", "You are the swarm coordinator. Initialize session, coordinate other agents via memory. Run: npx claude-flow@v3alpha hooks session-start", "hierarchical-coordinator")
-Task("Researcher", "Analyze requirements and existing code patterns. Store findings in memory via hooks.", "researcher")
-Task("Architect", "Design implementation approach based on research. Document decisions in memory.", "system-architect")
-Task("Coder", "Implement the solution following architect's design. Coordinate via hooks.", "coder")
-Task("Tester", "Write tests for the implementation. Report coverage via hooks.", "tester")
-Task("Reviewer", "Review code quality and security. Document findings.", "reviewer")
-
-// STEP 3: Batch all todos
-TodoWrite({ todos: [
-  {content: "Initialize swarm coordination", status: "in_progress", activeForm: "Initializing swarm"},
-  {content: "Research and analyze requirements", status: "in_progress", activeForm: "Researching requirements"},
-  {content: "Design architecture", status: "pending", activeForm: "Designing architecture"},
-  {content: "Implement solution", status: "pending", activeForm: "Implementing solution"},
-  {content: "Write tests", status: "pending", activeForm: "Writing tests"},
-  {content: "Review and finalize", status: "pending", activeForm: "Reviewing code"}
-]})
-
-// STEP 4: Store swarm state in memory
-mcp__claude-flow__memory_usage({
-  action: "store",
-  namespace: "swarm",
-  key: "current-session",
-  value: JSON.stringify({task: "[user's task]", agents: 6, startedAt: new Date().toISOString()})
-})
+// STEP 3: WAIT - Tell user agents are working, then STOP
+// Say: "I've spawned 5 agents to work on this in parallel. They'll report back when done."
+// DO NOT check status repeatedly. Just wait for user or agent responses.
 ```
+
+### ⏸️ CRITICAL: Spawn and Wait Pattern
+
+**After spawning background agents:**
+
+1. **TELL USER** - "I've spawned X agents working in parallel on: [list tasks]"
+2. **STOP** - Do not continue with more tool calls
+3. **WAIT** - Let the background agents complete their work
+4. **RESPOND** - When agents return results, review and synthesize
+
+**Example response after spawning:**
+```
+I've launched 5 concurrent agents to work on this:
+- 🔍 Researcher: Analyzing requirements and codebase
+- 🏗️ Architect: Designing the implementation approach
+- 💻 Coder: Implementing the solution
+- 🧪 Tester: Writing tests
+- 👀 Reviewer: Code review and security check
+
+They're working in parallel. I'll synthesize their results when they complete.
+```
+
+### 🚫 DO NOT:
+- Continuously check swarm status
+- Poll TaskOutput repeatedly
+- Add more tool calls after spawning
+- Ask "should I check on the agents?"
+
+### ✅ DO:
+- Spawn all agents in ONE message
+- Tell user what's happening
+- Wait for agent results to arrive
+- Synthesize results when they return
+
+## 🧠 AUTO-LEARNING PROTOCOL
+
+### Before Starting Any Task
+```bash
+# 1. Search memory for relevant patterns from past successes
+Bash("npx @claude-flow/cli@latest memory search -q '[task keywords]' --namespace patterns")
+
+# 2. Check if similar task was done before
+Bash("npx @claude-flow/cli@latest memory search -q '[task type]' --namespace tasks")
+
+# 3. Load learned optimizations
+Bash("npx @claude-flow/cli@latest hooks route --task '[task description]'")
+```
+
+### After Completing Any Task Successfully
+```bash
+# 1. Store successful pattern for future reference
+Bash("npx @claude-flow/cli@latest memory store --namespace patterns --key '[pattern-name]' --value '[what worked]'")
+
+# 2. Train neural patterns on the successful approach
+Bash("npx @claude-flow/cli@latest hooks post-edit --file '[main-file]' --train-neural true")
+
+# 3. Record task completion with metrics
+Bash("npx @claude-flow/cli@latest hooks post-task --task-id '[id]' --success true --store-results true")
+
+# 4. Trigger optimization worker if performance-related
+Bash("npx @claude-flow/cli@latest hooks worker dispatch --trigger optimize")
+```
+
+### Continuous Improvement Triggers
+
+| Trigger | Worker | When to Use |
+|---------|--------|-------------|
+| After major refactor | `optimize` | Performance optimization |
+| After adding features | `testgaps` | Find missing test coverage |
+| After security changes | `audit` | Security analysis |
+| After API changes | `document` | Update documentation |
+| Every 5+ file changes | `map` | Update codebase map |
+| Complex debugging | `deepdive` | Deep code analysis |
+
+### Memory-Enhanced Development
+
+**ALWAYS check memory before:**
+- Starting a new feature (search for similar implementations)
+- Debugging an issue (search for past solutions)
+- Refactoring code (search for learned patterns)
+- Performance work (search for optimization strategies)
+
+**ALWAYS store in memory after:**
+- Solving a tricky bug (store the solution pattern)
+- Completing a feature (store the approach)
+- Finding a performance fix (store the optimization)
+- Discovering a security issue (store the vulnerability pattern)
 
 ### 📋 Agent Routing by Task Type
 
@@ -117,9 +210,9 @@ mcp__claude-flow__memory_usage({
 ## Project Configuration
 
 This project is configured with Claude Flow V3:
-- **Topology**: hierarchical
+- **Topology**: hierarchical-mesh
 - **Max Agents**: 15
-- **Memory Backend**: hybrid (SQLite + AgentDB)
+- **Memory Backend**: hybrid
 - **HNSW Indexing**: Enabled (150x-12,500x faster)
 - **Neural Learning**: Enabled (SONA)
 
@@ -138,7 +231,6 @@ This project is configured with Claude Flow V3:
 | `session` | 7 | Session state management and persistence |
 | `config` | 7 | Configuration management and provider setup |
 | `status` | 3 | System status monitoring with watch mode |
-| `start` | 3 | Service startup and quick launch |
 | `workflow` | 6 | Workflow execution and template management |
 | `hooks` | 17 | Self-learning hooks + 12 background workers |
 | `hive-mind` | 6 | Queen-led Byzantine fault-tolerant consensus |
@@ -157,7 +249,6 @@ This project is configured with Claude Flow V3:
 | `embeddings` | 4 | Vector embeddings (embed, batch, search, init) - 75x faster with agentic-flow |
 | `claims` | 4 | Claims-based authorization (check, grant, revoke, list) |
 | `migrate` | 5 | V2 to V3 migration with rollback support |
-| `process` | 4 | Background process management |
 | `doctor` | 1 | System diagnostics with health checks |
 | `completions` | 4 | Shell completions (bash, zsh, fish, powershell) |
 
@@ -165,28 +256,28 @@ This project is configured with Claude Flow V3:
 
 ```bash
 # Initialize project
-npx claude-flow@v3alpha init --wizard
+npx @claude-flow/cli@latest init --wizard
 
 # Start daemon with background workers
-npx claude-flow@v3alpha daemon start
+npx @claude-flow/cli@latest daemon start
 
 # Spawn an agent
-npx claude-flow@v3alpha agent spawn -t coder --name my-coder
+npx @claude-flow/cli@latest agent spawn -t coder --name my-coder
 
 # Initialize swarm
-npx claude-flow@v3alpha swarm init --v3-mode
+npx @claude-flow/cli@latest swarm init --v3-mode
 
 # Search memory (HNSW-indexed)
-npx claude-flow@v3alpha memory search -q "authentication patterns"
+npx @claude-flow/cli@latest memory search -q "authentication patterns"
 
 # System diagnostics
-npx claude-flow@v3alpha doctor --fix
+npx @claude-flow/cli@latest doctor --fix
 
 # Security scan
-npx claude-flow@v3alpha security scan --depth full
+npx @claude-flow/cli@latest security scan --depth full
 
 # Performance benchmark
-npx claude-flow@v3alpha performance benchmark --suite all
+npx @claude-flow/cli@latest performance benchmark --suite all
 ```
 
 ## 🚀 Available Agents (60+ Types)
@@ -250,27 +341,27 @@ npx claude-flow@v3alpha performance benchmark --suite all
 
 ```bash
 # Core hooks
-npx claude-flow@v3alpha hooks pre-task --description "[task]"
-npx claude-flow@v3alpha hooks post-task --task-id "[id]" --success true
-npx claude-flow@v3alpha hooks post-edit --file "[file]" --train-patterns
+npx @claude-flow/cli@latest hooks pre-task --description "[task]"
+npx @claude-flow/cli@latest hooks post-task --task-id "[id]" --success true
+npx @claude-flow/cli@latest hooks post-edit --file "[file]" --train-patterns
 
 # Session management
-npx claude-flow@v3alpha hooks session-start --session-id "[id]"
-npx claude-flow@v3alpha hooks session-end --export-metrics true
-npx claude-flow@v3alpha hooks session-restore --session-id "[id]"
+npx @claude-flow/cli@latest hooks session-start --session-id "[id]"
+npx @claude-flow/cli@latest hooks session-end --export-metrics true
+npx @claude-flow/cli@latest hooks session-restore --session-id "[id]"
 
 # Intelligence routing
-npx claude-flow@v3alpha hooks route --task "[task]"
-npx claude-flow@v3alpha hooks explain --topic "[topic]"
+npx @claude-flow/cli@latest hooks route --task "[task]"
+npx @claude-flow/cli@latest hooks explain --topic "[topic]"
 
 # Neural learning
-npx claude-flow@v3alpha hooks pretrain --model-type moe --epochs 10
-npx claude-flow@v3alpha hooks build-agents --agent-types coder,tester
+npx @claude-flow/cli@latest hooks pretrain --model-type moe --epochs 10
+npx @claude-flow/cli@latest hooks build-agents --agent-types coder,tester
 
 # Background workers
-npx claude-flow@v3alpha hooks worker list
-npx claude-flow@v3alpha hooks worker dispatch --trigger audit
-npx claude-flow@v3alpha hooks worker status
+npx @claude-flow/cli@latest hooks worker list
+npx @claude-flow/cli@latest hooks worker dispatch --trigger audit
+npx @claude-flow/cli@latest hooks worker status
 ```
 
 ## 🧠 Intelligence System (RuVector)
@@ -324,6 +415,41 @@ Features:
 | CLI Startup | <500ms |
 | SONA Adaptation | <0.05ms |
 
+## 📊 Performance Optimization Protocol
+
+### Automatic Performance Tracking
+```bash
+# After any significant operation, track metrics
+Bash("npx @claude-flow/cli@latest hooks post-command --command '[operation]' --track-metrics true")
+
+# Periodically run benchmarks (every major feature)
+Bash("npx @claude-flow/cli@latest performance benchmark --suite all")
+
+# Analyze bottlenecks when performance degrades
+Bash("npx @claude-flow/cli@latest performance profile --target '[component]'")
+```
+
+### Session Persistence (Cross-Conversation Learning)
+```bash
+# At session start - restore previous context
+Bash("npx @claude-flow/cli@latest session restore --latest")
+
+# At session end - persist learned patterns
+Bash("npx @claude-flow/cli@latest hooks session-end --generate-summary true --persist-state true --export-metrics true")
+```
+
+### Neural Pattern Training
+```bash
+# Train on successful code patterns
+Bash("npx @claude-flow/cli@latest neural train --pattern-type coordination --epochs 10")
+
+# Predict optimal approach for new tasks
+Bash("npx @claude-flow/cli@latest neural predict --input '[task description]'")
+
+# View learned patterns
+Bash("npx @claude-flow/cli@latest neural patterns --list")
+```
+
 ## 🔧 Environment Variables
 
 ```bash
@@ -348,7 +474,7 @@ CLAUDE_FLOW_MEMORY_PATH=./data/memory
 
 ## 🔍 Doctor Health Checks
 
-Run `npx claude-flow@v3alpha doctor` to check:
+Run `npx @claude-flow/cli@latest doctor` to check:
 - Node.js version (20+)
 - npm version (9+)
 - Git installation
@@ -363,19 +489,19 @@ Run `npx claude-flow@v3alpha doctor` to check:
 ## 🚀 Quick Setup
 
 ```bash
-# Add MCP servers
-claude mcp add claude-flow npx claude-flow@v3alpha mcp start
-claude mcp add ruv-swarm npx ruv-swarm mcp start  # Optional
-claude mcp add flow-nexus npx flow-nexus@latest mcp start  # Optional
+# Add MCP servers (auto-detects MCP mode when stdin is piped)
+claude mcp add claude-flow -- npx -y @claude-flow/cli@latest
+claude mcp add ruv-swarm -- npx -y ruv-swarm mcp start  # Optional
+claude mcp add flow-nexus -- npx -y flow-nexus@latest mcp start  # Optional
 
 # Start daemon
-npx claude-flow@v3alpha daemon start
+npx @claude-flow/cli@latest daemon start
 
 # Run doctor
-npx claude-flow@v3alpha doctor --fix
+npx @claude-flow/cli@latest doctor --fix
 ```
 
-## 🎯 Claude Code vs MCP Tools
+## 🎯 Claude Code vs CLI Tools
 
 ### Claude Code Handles ALL EXECUTION:
 - **Task tool**: Spawn and run agents concurrently
@@ -385,15 +511,15 @@ npx claude-flow@v3alpha doctor --fix
 - TodoWrite and task management
 - Git operations
 
-### MCP Tools ONLY COORDINATE:
-- Swarm initialization (topology setup)
-- Agent type definitions
-- Task orchestration
-- Memory management
-- Neural features
-- Performance tracking
+### CLI Tools Handle Coordination (via Bash):
+- **Swarm init**: `npx @claude-flow/cli@latest swarm init --topology <type>`
+- **Swarm status**: `npx @claude-flow/cli@latest swarm status`
+- **Agent spawn**: `npx @claude-flow/cli@latest agent spawn -t <type> --name <name>`
+- **Memory store**: `npx @claude-flow/cli@latest memory store --namespace <ns> --key <k> --value <v>`
+- **Memory search**: `npx @claude-flow/cli@latest memory search -q "<query>"`
+- **Hooks**: `npx @claude-flow/cli@latest hooks <hook-name> [options]`
 
-**KEY**: MCP coordinates the strategy, Claude Code's Task tool executes with real agents.
+**KEY**: CLI coordinates the strategy via Bash, Claude Code's Task tool executes with real agents.
 
 ## Support
 
@@ -402,7 +528,7 @@ npx claude-flow@v3alpha doctor --fix
 
 ---
 
-Remember: **Claude Flow coordinates, Claude Code creates!**
+Remember: **Claude Flow CLI coordinates, Claude Code Task tool creates!**
 
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
@@ -410,4 +536,22 @@ NEVER create files unless they're absolutely necessary for achieving your goal.
 ALWAYS prefer editing an existing file to creating a new one.
 NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
 Never save working files, text/mds and tests to the root folder.
-After spawning a swarm, wait, don't continuously check status.
+
+## 🚨 SWARM EXECUTION RULES (CRITICAL)
+1. **SPAWN IN BACKGROUND**: Use `run_in_background: true` for all agent Task calls
+2. **SPAWN ALL AT ONCE**: Put ALL agent Task calls in ONE message for parallel execution
+3. **TELL USER**: After spawning, list what each agent is doing (use emojis for clarity)
+4. **STOP AND WAIT**: After spawning, STOP - do NOT add more tool calls or check status
+5. **NO POLLING**: Never poll TaskOutput or check swarm status - trust agents to return
+6. **SYNTHESIZE**: When agent results arrive, review ALL results before proceeding
+7. **NO CONFIRMATION**: Don't ask "should I check?" - just wait for results
+
+Example spawn message:
+```
+"I've launched 4 agents in background:
+- 🔍 Researcher: [task]
+- 💻 Coder: [task]
+- 🧪 Tester: [task]
+- 👀 Reviewer: [task]
+Working in parallel - I'll synthesize when they complete."
+```
