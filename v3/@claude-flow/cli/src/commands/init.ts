@@ -220,7 +220,34 @@ const initAction = async (ctx: CommandContext): Promise<CommandResult> => {
 
       output.writeln();
       output.printSuccess('All services started');
-    } else {
+    }
+
+    // Handle --with-embeddings
+    const withEmbeddings = ctx.flags['with-embeddings'] || ctx.flags.withEmbeddings;
+    const embeddingModel = (ctx.flags['embedding-model'] || ctx.flags.embeddingModel || 'all-MiniLM-L6-v2') as string;
+
+    if (withEmbeddings) {
+      output.writeln();
+      output.printInfo('Initializing ONNX embedding subsystem...');
+
+      const { execSync } = await import('child_process');
+
+      try {
+        output.writeln(output.dim(`  Model: ${embeddingModel}`));
+        output.writeln(output.dim('  Hyperbolic: Enabled (Poincaré ball)'));
+        execSync(`npx @claude-flow/cli@latest embeddings init --model ${embeddingModel} --no-download --force 2>/dev/null`, {
+          stdio: 'pipe',
+          cwd: ctx.cwd,
+          timeout: 30000
+        });
+        output.writeln(output.success('  ✓ Embeddings initialized'));
+        output.writeln(output.dim('    Run "embeddings init --download" to download model'));
+      } catch (err) {
+        output.writeln(output.warning('  Embedding initialization skipped (run manually)'));
+      }
+    }
+
+    if (!startDaemon && !startAll) {
       // Next steps (only if not auto-starting)
       output.writeln(output.bold('Next steps:'));
       output.printList([
