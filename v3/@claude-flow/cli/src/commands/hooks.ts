@@ -3520,7 +3520,7 @@ const tokenOptimizeCommand: Command = {
   description: 'Token optimization via agentic-flow Agent Booster (30-50% savings)',
   options: [
     { name: 'query', short: 'q', type: 'string', description: 'Query for compact context retrieval' },
-    { name: 'agents', short: 'n', type: 'number', description: 'Agent count for optimal config', default: '6' },
+    { name: 'agents', short: 'A', type: 'number', description: 'Agent count for optimal config', default: '6' },
     { name: 'report', short: 'r', type: 'boolean', description: 'Generate optimization report' },
     { name: 'stats', short: 's', type: 'boolean', description: 'Show token savings statistics' },
   ],
