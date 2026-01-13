@@ -2,6 +2,11 @@
  * Neural MCP Tools for CLI
  *
  * V2 Compatibility - Neural network and ML tools
+ *
+ * ⚠️ IMPORTANT: Training is SIMULATED for state management.
+ * - No actual ML models are trained
+ * - Patterns/embeddings are stored locally for coordination
+ * - For real neural features, use @claude-flow/neural module
  */
 
 import type { MCPTool } from './types.js';
