@@ -1,12 +1,30 @@
 /**
  * V3 CLI Hive Mind Command
  * Queen-led consensus-based multi-agent coordination
+ *
+ * Updated to support --claude flag for launching interactive Claude Code sessions
+ * PR: Fix #955 - Implement --claude flag for hive-mind spawn command
  */
 
 import type { Command, CommandContext, CommandResult } from '../types.js';
 import { output } from '../output.js';
 import { select, confirm, input } from '../prompt.js';
 import { callMCPTool, MCPClientError } from '../mcp-client.js';
+import { spawn as childSpawn, execSync } from 'child_process';
+import { mkdir, writeFile } from 'fs/promises';
+import { join } from 'path';
+
+// Worker type definitions for prompt generation
+interface HiveWorker {
+  agentId: string;
+  role: string;
+  type?: string;
+  joinedAt?: string;
+}
+
+interface WorkerGroups {
+  [key: string]: HiveWorker[];
+}
 
 // Hive topologies
 const TOPOLOGIES = [
@@ -24,6 +42,328 @@ const CONSENSUS_STRATEGIES = [
   { value: 'crdt', label: 'CRDT', hint: 'Conflict-free replicated data' },
   { value: 'quorum', label: 'Quorum', hint: 'Simple majority voting' }
 ];
+
+/**
+ * Group workers by their type for prompt generation
+ */
+function groupWorkersByType(workers: HiveWorker[]): WorkerGroups {
+  const groups: WorkerGroups = {};
+  for (const worker of workers) {
+    const type = worker.type || worker.role || 'worker';
+    if (!groups[type]) {
+      groups[type] = [];
+    }
+    groups[type].push(worker);
+  }
+  return groups;
+}
+
+/**
+ * Generate comprehensive Hive Mind prompt for Claude Code
+ * Ported from v2.7.47 with enhancements for v3
+ */
+function generateHiveMindPrompt(
+  swarmId: string,
+  swarmName: string,
+  objective: string,
+  workers: HiveWorker[],
+  workerGroups: WorkerGroups,
+  flags: Record<string, unknown>
+): string {
+  const currentTime = new Date().toISOString();
+  const workerTypes = Object.keys(workerGroups);
+  const queenType = (flags.queenType as string) || 'strategic';
+  const consensusAlgorithm = (flags.consensus as string) || 'byzantine';
+  const topology = (flags.topology as string) || 'hierarchical-mesh';
+
+  return `🧠 HIVE MIND COLLECTIVE INTELLIGENCE SYSTEM
+═══════════════════════════════════════════════
+
+You are the Queen coordinator of a Hive Mind swarm with collective intelligence capabilities.
+
+HIVE MIND CONFIGURATION:
+📌 Swarm ID: ${swarmId}
+📌 Swarm Name: ${swarmName}
+🎯 Objective: ${objective}
+👑 Queen Type: ${queenType}
+🐝 Worker Count: ${workers.length}
+🔗 Topology: ${topology}
+🤝 Consensus Algorithm: ${consensusAlgorithm}
+⏰ Initialized: ${currentTime}
+
+WORKER DISTRIBUTION:
+${workerTypes.map(type => `• ${type}: ${workerGroups[type].length} agents`).join('\n')}
+
+🔧 AVAILABLE MCP TOOLS FOR HIVE MIND COORDINATION:
+
+1️⃣ **COLLECTIVE INTELLIGENCE**
+   mcp__claude-flow__hive-mind_consensus    - Democratic decision making
+   mcp__claude-flow__hive-mind_memory       - Share knowledge across the hive
+   mcp__claude-flow__hive-mind_broadcast    - Broadcast to all workers
+   mcp__claude-flow__neural_patterns        - Neural pattern recognition
+
+2️⃣ **QUEEN COORDINATION**
+   mcp__claude-flow__hive-mind_status       - Monitor swarm health
+   mcp__claude-flow__task_create            - Create and delegate tasks
+   mcp__claude-flow__task_orchestrate       - Orchestrate task distribution
+   mcp__claude-flow__agent_spawn            - Spawn additional workers
+
+3️⃣ **WORKER MANAGEMENT**
+   mcp__claude-flow__agent_list             - List all active agents
+   mcp__claude-flow__agent_status           - Check agent status
+   mcp__claude-flow__agent_metrics          - Track worker performance
+   mcp__claude-flow__hive-mind_join         - Add agent to hive
+   mcp__claude-flow__hive-mind_leave        - Remove agent from hive
+
+4️⃣ **TASK ORCHESTRATION**
+   mcp__claude-flow__task_create            - Create hierarchical tasks
+   mcp__claude-flow__task_status            - Track task progress
+   mcp__claude-flow__task_complete          - Mark tasks complete
+   mcp__claude-flow__workflow_create        - Create workflows
+
+5️⃣ **MEMORY & LEARNING**
+   mcp__claude-flow__memory_store           - Store collective knowledge
+   mcp__claude-flow__memory_retrieve        - Access shared memory
+   mcp__claude-flow__memory_search          - Search memory patterns
+   mcp__claude-flow__neural_train           - Learn from experiences
+   mcp__claude-flow__hooks_intelligence_pattern-store - Store patterns
+
+📋 HIVE MIND EXECUTION PROTOCOL:
+
+1. **INITIALIZATION PHASE**
+   - Verify all workers are online and responsive
+   - Establish communication channels
+   - Load previous session state if available
+   - Initialize shared memory space
+
+2. **TASK DISTRIBUTION PHASE**
+   - Analyze the objective and decompose into subtasks
+   - Assign tasks based on worker specializations
+   - Set up task dependencies and ordering
+   - Monitor parallel execution
+
+3. **COORDINATION PHASE**
+   - Use consensus for critical decisions
+   - Aggregate results from workers
+   - Resolve conflicts using ${consensusAlgorithm} consensus
+   - Share learnings across the hive
+
+4. **COMPLETION PHASE**
+   - Verify all subtasks are complete
+   - Consolidate results
+   - Store learnings in collective memory
+   - Report final status
+
+🎯 YOUR OBJECTIVE:
+${objective}
+
+💡 COORDINATION TIPS:
+• Use mcp__claude-flow__hive-mind_broadcast for swarm-wide announcements
+• Check worker status regularly with mcp__claude-flow__hive-mind_status
+• Store important decisions in shared memory for persistence
+• Use consensus for any decisions affecting multiple workers
+• Monitor task progress and reassign if workers are blocked
+
+🚀 BEGIN HIVE MIND COORDINATION NOW!
+Start by checking the current hive status and then proceed with the objective.
+`;
+}
+
+/**
+ * Spawn Claude Code with Hive Mind coordination instructions
+ * Ported from v2.7.47 spawnClaudeCodeInstances function
+ */
+async function spawnClaudeCodeInstance(
+  swarmId: string,
+  swarmName: string,
+  objective: string,
+  workers: HiveWorker[],
+  flags: Record<string, unknown>
+): Promise<{ success: boolean; promptFile?: string; error?: string }> {
+  output.writeln();
+  output.writeln(output.bold('🚀 Launching Claude Code with Hive Mind Coordination'));
+  output.writeln(output.dim('─'.repeat(60)));
+
+  const spinner = output.createSpinner({ text: 'Preparing Hive Mind coordination prompt...', spinner: 'dots' });
+  spinner.start();
+
+  try {
+    // Generate comprehensive Hive Mind prompt
+    const workerGroups = groupWorkersByType(workers);
+    const hiveMindPrompt = generateHiveMindPrompt(
+      swarmId,
+      swarmName,
+      objective,
+      workers,
+      workerGroups,
+      flags
+    );
+
+    spinner.succeed('Hive Mind coordination prompt ready!');
+
+    // Display coordination summary
+    output.writeln();
+    output.writeln(output.bold('🧠 Hive Mind Configuration'));
+    output.writeln(output.dim('─'.repeat(60)));
+    output.printList([
+      `Swarm ID: ${output.highlight(swarmId)}`,
+      `Objective: ${output.highlight(objective)}`,
+      `Queen Type: ${output.highlight((flags.queenType as string) || 'strategic')}`,
+      `Worker Count: ${output.highlight(String(workers.length))}`,
+      `Worker Types: ${output.highlight(Object.keys(workerGroups).join(', '))}`,
+      `Consensus: ${output.highlight((flags.consensus as string) || 'byzantine')}`,
+      `MCP Tools: ${output.success('Full Claude-Flow integration enabled')}`
+    ]);
+
+    // Ensure sessions directory exists
+    const sessionsDir = join('.hive-mind', 'sessions');
+    await mkdir(sessionsDir, { recursive: true });
+
+    const promptFile = join(sessionsDir, `hive-mind-prompt-${swarmId}.txt`);
+    await writeFile(promptFile, hiveMindPrompt, 'utf8');
+    output.writeln();
+    output.printSuccess(`Hive Mind prompt saved to: ${promptFile}`);
+
+    // Check if claude command exists
+    let claudeAvailable = false;
+    try {
+      execSync('which claude', { stdio: 'ignore' });
+      claudeAvailable = true;
+    } catch {
+      output.writeln();
+      output.printWarning('Claude Code CLI not found in PATH');
+      output.writeln(output.dim('Install it with: npm install -g @anthropic-ai/claude-code'));
+      output.writeln(output.dim('Falling back to displaying instructions...'));
+    }
+
+    const dryRun = flags.dryRun || flags['dry-run'];
+
+    if (claudeAvailable && !dryRun) {
+      // Build arguments - flags first, then prompt
+      const claudeArgs: string[] = [];
+
+      // Check for non-interactive mode
+      const isNonInteractive = flags['non-interactive'] || flags.nonInteractive;
+      if (isNonInteractive) {
+        claudeArgs.push('-p'); // Print mode
+        claudeArgs.push('--output-format', 'stream-json');
+        claudeArgs.push('--verbose');
+        output.printInfo('Running in non-interactive mode');
+      }
+
+      // Add auto-permission flag unless explicitly disabled
+      const skipPermissions = flags['dangerously-skip-permissions'] !== false && !flags['no-auto-permissions'];
+      if (skipPermissions) {
+        claudeArgs.push('--dangerously-skip-permissions');
+        if (!isNonInteractive) {
+          output.printWarning('Using --dangerously-skip-permissions for seamless hive-mind execution');
+        }
+      }
+
+      // Add the prompt as the LAST argument
+      claudeArgs.push(hiveMindPrompt);
+
+      output.writeln();
+      output.printInfo('Launching Claude Code...');
+      output.writeln(output.dim('Press Ctrl+C to pause the session'));
+
+      // Spawn claude with properly ordered arguments
+      const claudeProcess = childSpawn('claude', claudeArgs, {
+        stdio: 'inherit',
+        shell: false,
+      });
+
+      // Set up SIGINT handler for session management
+      let isExiting = false;
+      const sigintHandler = () => {
+        if (isExiting) return;
+        isExiting = true;
+
+        output.writeln();
+        output.writeln();
+        output.printWarning('Pausing session and terminating Claude Code...');
+
+        if (claudeProcess && !claudeProcess.killed) {
+          claudeProcess.kill('SIGTERM');
+        }
+
+        output.writeln();
+        output.printSuccess('Session paused');
+        output.writeln(output.dim(`Prompt file saved at: ${promptFile}`));
+        output.writeln(output.dim('To resume, run claude with the saved prompt file'));
+
+        process.exit(0);
+      };
+
+      process.on('SIGINT', sigintHandler);
+      process.on('SIGTERM', sigintHandler);
+
+      // Handle process exit
+      claudeProcess.on('exit', (code) => {
+        // Clean up signal handlers
+        process.removeListener('SIGINT', sigintHandler);
+        process.removeListener('SIGTERM', sigintHandler);
+
+        if (code === 0) {
+          output.writeln();
+          output.printSuccess('Claude Code completed successfully');
+        } else if (code !== null) {
+          output.writeln();
+          output.printError(`Claude Code exited with code ${code}`);
+        }
+      });
+
+      output.writeln();
+      output.printSuccess('Claude Code launched with Hive Mind coordination');
+      output.printInfo('The Queen coordinator will orchestrate all worker agents');
+      output.writeln(output.dim(`Prompt file saved at: ${promptFile}`));
+
+      return { success: true, promptFile };
+    } else if (dryRun) {
+      output.writeln();
+      output.printInfo('Dry run - would execute Claude Code with prompt:');
+      output.writeln(output.dim(`Prompt length: ${hiveMindPrompt.length} characters`));
+      output.writeln();
+      output.writeln(output.dim('First 500 characters of prompt:'));
+      output.writeln(output.highlight(hiveMindPrompt.substring(0, 500) + '...'));
+      output.writeln();
+      output.writeln(output.dim(`Full prompt saved to: ${promptFile}`));
+
+      return { success: true, promptFile };
+    } else {
+      // Claude not available - show instructions
+      output.writeln();
+      output.writeln(output.bold('📋 Manual Execution Instructions:'));
+      output.writeln(output.dim('─'.repeat(50)));
+      output.printList([
+        'Install Claude Code: npm install -g @anthropic-ai/claude-code',
+        `Run with saved prompt: claude < ${promptFile}`,
+        `Or copy manually: cat ${promptFile} | claude`,
+        `With auto-permissions: claude --dangerously-skip-permissions < ${promptFile}`
+      ]);
+
+      return { success: true, promptFile };
+    }
+  } catch (error) {
+    spinner.fail('Failed to prepare Claude Code coordination');
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    output.printError(`Error: ${errorMessage}`);
+
+    // Try to save prompt as fallback
+    try {
+      const promptFile = `hive-mind-prompt-${swarmId}-fallback.txt`;
+      const workerGroups = groupWorkersByType(workers);
+      const hiveMindPrompt = generateHiveMindPrompt(swarmId, swarmName, objective, workers, workerGroups, flags);
+      await writeFile(promptFile, hiveMindPrompt, 'utf8');
+      output.writeln();
+      output.printSuccess(`Prompt saved to: ${promptFile}`);
+      output.writeln(output.dim('You can run Claude Code manually with the saved prompt'));
+      return { success: false, promptFile, error: errorMessage };
+    } catch {
+      return { success: false, error: errorMessage };
+    }
+  }
+}
 
 // Init subcommand
 const initCommand: Command = {
@@ -139,6 +479,7 @@ const initCommand: Command = {
       output.writeln();
       output.printInfo('Queen agent is ready to coordinate worker agents');
       output.writeln(output.dim('  Use "claude-flow hive-mind spawn" to add workers'));
+      output.writeln(output.dim('  Use "claude-flow hive-mind spawn --claude" to launch Claude Code'));
 
       return { success: true, data: result };
     } catch (error) {
@@ -153,10 +494,10 @@ const initCommand: Command = {
   }
 };
 
-// Spawn subcommand
+// Spawn subcommand - UPDATED with --claude flag
 const spawnCommand: Command = {
   name: 'spawn',
-  description: 'Spawn worker agents into the hive',
+  description: 'Spawn worker agents into the hive (use --claude to launch Claude Code)',
   options: [
     {
       name: 'count',
@@ -186,12 +527,51 @@ const spawnCommand: Command = {
       description: 'Prefix for worker IDs',
       type: 'string',
       default: 'hive-worker'
+    },
+    // NEW: --claude flag for launching Claude Code
+    {
+      name: 'claude',
+      description: 'Launch Claude Code with hive-mind coordination prompt',
+      type: 'boolean',
+      default: false
+    },
+    {
+      name: 'objective',
+      short: 'o',
+      description: 'Objective for the hive mind (used with --claude)',
+      type: 'string'
+    },
+    {
+      name: 'dangerously-skip-permissions',
+      description: 'Skip permission prompts in Claude Code (use with caution)',
+      type: 'boolean',
+      default: true
+    },
+    {
+      name: 'no-auto-permissions',
+      description: 'Disable automatic permission skipping',
+      type: 'boolean',
+      default: false
+    },
+    {
+      name: 'dry-run',
+      description: 'Show what would be done without launching Claude Code',
+      type: 'boolean',
+      default: false
+    },
+    {
+      name: 'non-interactive',
+      description: 'Run Claude Code in non-interactive mode',
+      type: 'boolean',
+      default: false
     }
   ],
   examples: [
     { command: 'claude-flow hive-mind spawn -n 5', description: 'Spawn 5 workers' },
     { command: 'claude-flow hive-mind spawn -n 3 -r specialist', description: 'Spawn 3 specialists' },
-    { command: 'claude-flow hive-mind spawn -t coder -p my-coder', description: 'Spawn coder with custom prefix' }
+    { command: 'claude-flow hive-mind spawn -t coder -p my-coder', description: 'Spawn coder with custom prefix' },
+    { command: 'claude-flow hive-mind spawn --claude -o "Build a REST API"', description: 'Launch Claude Code with objective' },
+    { command: 'claude-flow hive-mind spawn -n 5 --claude -o "Research AI patterns"', description: 'Spawn workers and launch Claude Code' }
   ],
   action: async (ctx: CommandContext): Promise<CommandResult> => {
     // Parse count with fallback to default
@@ -199,6 +579,8 @@ const spawnCommand: Command = {
     const role = (ctx.flags.role as string) || 'worker';
     const agentType = (ctx.flags.type as string) || 'worker';
     const prefix = (ctx.flags.prefix as string) || 'hive-worker';
+    const launchClaude = ctx.flags.claude as boolean;
+    let objective = (ctx.flags.objective as string) || ctx.args.join(' ');
 
     output.printInfo(`Spawning ${count} ${role} agent(s)...`);
 
@@ -213,6 +595,7 @@ const spawnCommand: Command = {
         }>;
         totalWorkers: number;
         hiveStatus: string;
+        hiveId?: string;
         message: string;
         error?: string;
       }>('hive-mind/spawn', {
@@ -228,7 +611,7 @@ const spawnCommand: Command = {
         return { success: false, exitCode: 1 };
       }
 
-      if (ctx.flags.format === 'json') {
+      if (ctx.flags.format === 'json' && !launchClaude) {
         output.printJson(result);
         return { success: true, data: result };
       }
@@ -256,6 +639,61 @@ const spawnCommand: Command = {
       output.writeln();
       output.printSuccess(`Spawned ${result.spawned} agent(s)`);
       output.writeln(output.dim(`  Total workers in hive: ${result.totalWorkers}`));
+
+      // NEW: Handle --claude flag
+      if (launchClaude) {
+        // Get objective if not provided
+        if (!objective && ctx.interactive) {
+          objective = await input({
+            message: 'Enter the objective for the hive mind:',
+            validate: (v) => v.length > 0 || 'Objective is required when using --claude'
+          });
+        }
+
+        if (!objective) {
+          output.writeln();
+          output.printWarning('No objective provided. Using default objective.');
+          objective = 'Coordinate the hive mind workers to complete tasks efficiently.';
+        }
+
+        // Get hive status for swarm info
+        let swarmId = result.hiveId || 'default';
+        let swarmName = 'Hive Mind Swarm';
+
+        try {
+          const statusResult = await callMCPTool<{
+            hiveId?: string;
+            topology?: string;
+            consensus?: string;
+          }>('hive-mind/status', { includeWorkers: false });
+          swarmId = statusResult.hiveId || swarmId;
+        } catch {
+          // Use defaults if status call fails
+        }
+
+        // Convert workers to expected format
+        const workers: HiveWorker[] = (result.workers || []).map(w => ({
+          agentId: w.agentId,
+          role: w.role,
+          type: agentType,
+          joinedAt: w.joinedAt
+        }));
+
+        // Launch Claude Code with hive mind prompt
+        const claudeResult = await spawnClaudeCodeInstance(
+          swarmId,
+          swarmName,
+          objective,
+          workers,
+          ctx.flags as Record<string, unknown>
+        );
+
+        if (!claudeResult.success) {
+          return { success: false, exitCode: 1, data: { spawn: result, claude: claudeResult } };
+        }
+
+        return { success: true, data: { spawn: result, claude: claudeResult } };
+      }
 
       return { success: true, data: result };
     } catch (error) {
@@ -840,6 +1278,7 @@ export const hiveMindCommand: Command = {
   examples: [
     { command: 'claude-flow hive-mind init -t hierarchical-mesh', description: 'Initialize hive' },
     { command: 'claude-flow hive-mind spawn -n 5', description: 'Spawn workers' },
+    { command: 'claude-flow hive-mind spawn --claude -o "Build a feature"', description: 'Launch Claude Code with hive mind' },
     { command: 'claude-flow hive-mind task -d "Build feature"', description: 'Submit task' }
   ],
   action: async (): Promise<CommandResult> => {
@@ -851,7 +1290,7 @@ export const hiveMindCommand: Command = {
     output.writeln('Subcommands:');
     output.printList([
       `${output.highlight('init')}            - Initialize hive mind`,
-      `${output.highlight('spawn')}           - Spawn worker agents`,
+      `${output.highlight('spawn')}           - Spawn worker agents (use --claude to launch Claude Code)`,
       `${output.highlight('status')}          - Show hive status`,
       `${output.highlight('task')}            - Submit task to hive`,
       `${output.highlight('join')}            - Join an agent to the hive`,
@@ -869,8 +1308,13 @@ export const hiveMindCommand: Command = {
       'Byzantine fault tolerant consensus',
       'HNSW-accelerated pattern matching',
       'Cross-session memory persistence',
-      'Automatic load balancing'
+      'Automatic load balancing',
+      output.success('NEW: --claude flag to launch interactive Claude Code sessions')
     ]);
+    output.writeln();
+    output.writeln('Quick Start with Claude Code:');
+    output.writeln(output.dim('  claude-flow hive-mind init'));
+    output.writeln(output.dim('  claude-flow hive-mind spawn -n 5 --claude -o "Your objective here"'));
 
     return { success: true };
   }
