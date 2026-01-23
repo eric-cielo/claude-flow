@@ -1255,6 +1255,40 @@ Build custom plugins with the fluent builder API. Create MCP tools, hooks, worke
 
 **Plugin Performance:** Load <20ms, Hook execution <0.5ms, Worker spawn <50ms
 
+### 📦 Available Optional Plugins
+
+Install these optional plugins to extend Claude Flow capabilities:
+
+| Plugin | Version | Description | Install Command |
+|--------|---------|-------------|-----------------|
+| **@claude-flow/plugin-agentic-qe** | 3.0.0-alpha.2 | Quality Engineering with 58 AI agents across 12 DDD contexts. TDD, coverage analysis, security scanning, chaos engineering, accessibility testing. | `npm install @claude-flow/plugin-agentic-qe` |
+| **@claude-flow/plugin-prime-radiant** | 0.1.4 | Mathematical AI interpretability with 6 engines: sheaf cohomology, spectral analysis, causal inference, quantum topology, category theory, HoTT proofs. | `npm install @claude-flow/plugin-prime-radiant` |
+
+**Agentic-QE Plugin Features:**
+- 58 specialized QE agents across 13 bounded contexts
+- 16 MCP tools: `aqe/generate-tests`, `aqe/tdd-cycle`, `aqe/analyze-coverage`, `aqe/security-scan`, `aqe/chaos-inject`, etc.
+- London-style TDD with red-green-refactor cycles
+- O(log n) coverage gap detection with Johnson-Lindenstrauss
+- OWASP/SANS compliance auditing
+
+**Prime-Radiant Plugin Features:**
+- 6 mathematical engines for AI interpretability
+- 6 MCP tools: `pr_coherence_check`, `pr_spectral_analyze`, `pr_causal_infer`, `pr_consensus_verify`, `pr_quantum_topology`, `pr_memory_gate`
+- Sheaf Laplacian coherence detection (<5ms)
+- Do-calculus causal inference
+- Hallucination prevention via consensus verification
+
+```bash
+# Install Quality Engineering plugin
+npm install @claude-flow/plugin-agentic-qe
+
+# Install AI Interpretability plugin
+npm install @claude-flow/plugin-prime-radiant
+
+# Register plugins in your project
+npx claude-flow plugins list --installed
+```
+
 </details>
 
 <details>

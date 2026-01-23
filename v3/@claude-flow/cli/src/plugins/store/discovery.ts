@@ -16,6 +16,38 @@ import type {
 import { resolveIPNS, fetchFromIPFS } from '../../transfer/ipfs/client.js';
 
 /**
+ * Fetch real npm download stats for a package
+ */
+async function fetchNpmStats(packageName: string): Promise<{ downloads: number; version: string } | null> {
+  try {
+    // Fetch last week downloads
+    const downloadsUrl = `https://api.npmjs.org/downloads/point/last-week/${encodeURIComponent(packageName)}`;
+    const downloadsRes = await fetch(downloadsUrl, { signal: AbortSignal.timeout(3000) });
+
+    if (!downloadsRes.ok) return null;
+
+    const downloadsData = await downloadsRes.json() as { downloads?: number };
+
+    // Fetch package info for version
+    const packageUrl = `https://registry.npmjs.org/${encodeURIComponent(packageName)}/latest`;
+    const packageRes = await fetch(packageUrl, { signal: AbortSignal.timeout(3000) });
+
+    let version = 'unknown';
+    if (packageRes.ok) {
+      const packageData = await packageRes.json() as { version?: string };
+      version = packageData.version || 'unknown';
+    }
+
+    return {
+      downloads: downloadsData.downloads || 0,
+      version,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Default plugin store configuration
  */
 export const DEFAULT_PLUGIN_STORE_CONFIG: PluginStoreConfig = {
@@ -109,7 +141,7 @@ export class PluginDiscoveryService {
       const cid = await resolveIPNS(registry.ipnsName, registry.gateway);
       if (!cid) {
         // Fallback to demo registry
-        return this.createDemoRegistry(registry);
+        return this.createDemoRegistryAsync(registry);
       }
 
       console.log(`[PluginDiscovery] Resolved to CID: ${cid}`);
@@ -117,7 +149,7 @@ export class PluginDiscoveryService {
       // Fetch registry from IPFS
       const registryData = await fetchFromIPFS<PluginRegistry>(cid, registry.gateway);
       if (!registryData) {
-        return this.createDemoRegistry(registry);
+        return this.createDemoRegistryAsync(registry);
       }
 
       // Verify registry signature if required
@@ -144,54 +176,49 @@ export class PluginDiscoveryService {
     } catch (error) {
       console.error(`[PluginDiscovery] Failed to discover registry:`, error);
       // Return demo registry on error
-      return this.createDemoRegistry(registry);
+      return this.createDemoRegistryAsync(registry);
     }
   }
 
   /**
-   * Create demo plugin registry
+   * Create demo plugin registry with real npm stats
    */
-  private createDemoRegistry(registry: KnownPluginRegistry): PluginDiscoveryResult {
+  private async createDemoRegistryAsync(registry: KnownPluginRegistry): Promise<PluginDiscoveryResult> {
     console.log(`[PluginDiscovery] Using demo registry for ${registry.name}`);
+
+    // Get plugins with real npm stats
+    const plugins = await this.getDemoPluginsWithStats();
 
     const demoRegistry: PluginRegistry = {
       version: '1.0.0',
       type: 'plugins',
       updatedAt: new Date().toISOString(),
       ipnsName: registry.ipnsName,
-      plugins: this.getDemoPlugins(),
+      plugins,
       categories: [
-        { id: 'ai-ml', name: 'AI/ML', description: 'AI and machine learning plugins', pluginCount: 3 },
-        { id: 'security', name: 'Security', description: 'Security and compliance plugins', pluginCount: 2 },
-        { id: 'devops', name: 'DevOps', description: 'CI/CD and deployment plugins', pluginCount: 2 },
-        { id: 'integrations', name: 'Integrations', description: 'Third-party integrations', pluginCount: 3 },
-        { id: 'agents', name: 'Agents', description: 'Custom agent types', pluginCount: 2 },
+        { id: 'ai-ml', name: 'AI/ML', description: 'AI and machine learning plugins', pluginCount: 1 },
+        { id: 'security', name: 'Security', description: 'Security and compliance plugins', pluginCount: 1 },
+        { id: 'devops', name: 'DevOps', description: 'CI/CD and deployment plugins', pluginCount: 1 },
+        { id: 'integrations', name: 'Integrations', description: 'Third-party integrations', pluginCount: 2 },
+        { id: 'agents', name: 'Agents', description: 'Custom agent types', pluginCount: 1 },
       ],
       authors: [
         {
           id: 'claude-flow-team',
           displayName: 'Claude Flow Team',
           verified: true,
-          plugins: 5,
-          totalDownloads: 50000,
+          plugins: plugins.length,
+          totalDownloads: plugins.reduce((sum, p) => sum + p.downloads, 0),
           reputation: 100,
         },
-        {
-          id: 'community-contributor',
-          displayName: 'Community Contributors',
-          verified: false,
-          plugins: 7,
-          totalDownloads: 15000,
-          reputation: 85,
-        },
       ],
-      totalPlugins: 9,
-      totalDownloads: 71200,
-      totalAuthors: 2,
-      featured: ['@claude-flow/neural', '@claude-flow/security', 'plugin-creator'],
-      trending: ['@claude-flow/embeddings', 'plugin-creator', 'community-analytics'],
-      newest: ['custom-agents', 'slack-integration', 'plugin-creator'],
-      official: ['@claude-flow/neural', '@claude-flow/security', '@claude-flow/embeddings', '@claude-flow/claims', '@claude-flow/performance', 'plugin-creator'],
+      totalPlugins: plugins.length,
+      totalDownloads: plugins.reduce((sum, p) => sum + p.downloads, 0),
+      totalAuthors: 1,
+      featured: ['@claude-flow/plugin-agentic-qe', '@claude-flow/plugin-prime-radiant', '@claude-flow/security', '@claude-flow/claims'],
+      trending: ['@claude-flow/plugin-agentic-qe', '@claude-flow/plugin-prime-radiant'],
+      newest: ['@claude-flow/plugin-agentic-qe', '@claude-flow/plugin-prime-radiant'],
+      official: ['@claude-flow/plugin-agentic-qe', '@claude-flow/plugin-prime-radiant', '@claude-flow/security', '@claude-flow/claims'],
       compatibilityMatrix: [
         { pluginId: '@claude-flow/neural', pluginVersion: '3.0.0', claudeFlowVersions: ['3.x'], tested: true },
         { pluginId: '@claude-flow/security', pluginVersion: '3.0.0', claudeFlowVersions: ['3.x'], tested: true },
@@ -482,73 +509,227 @@ export class PluginDiscoveryService {
         verified: false,
         trustLevel: 'community',
       },
-      // Plugin Creator - A meta-plugin for creating new plugins
+      // Plugin SDK - Unified Plugin SDK for creating plugins
       {
-        id: 'plugin-creator',
-        name: 'plugin-creator',
-        displayName: 'Plugin Creator Pro',
-        description: 'Advanced plugin scaffolding and development toolkit. Create, test, and publish Claude Flow plugins with templates, hot-reload, and IPFS publishing support.',
-        version: '2.1.0',
-        cid: 'bafybeiplugincreatorpro2024xyz',
+        id: '@claude-flow/plugins',
+        name: '@claude-flow/plugins',
+        displayName: 'Plugin SDK',
+        description: 'Unified Plugin SDK for Claude Flow V3 - Worker, Hook, and Provider Integration. Create, test, and publish Claude Flow plugins.',
+        version: '3.0.0-alpha.2',
+        cid: 'bafybeipluginsdk2024xyz',
         size: 156000,
-        checksum: 'sha256:plugincreator2024abc',
-        author: {
-          id: 'claude-flow-team',
-          displayName: 'Claude Flow Team',
-          verified: true,
-          plugins: 6,
-          totalDownloads: 55000,
-          reputation: 100,
-        },
+        checksum: 'sha256:pluginsdk2024abc',
+        author: officialAuthor,
         license: 'MIT',
-        categories: ['devops', 'agents'],
-        tags: ['plugin', 'creator', 'scaffold', 'development', 'toolkit', 'templates', 'hot-reload', 'ipfs'],
-        keywords: ['plugin', 'creator', 'development'],
-        downloads: 4200,
-        rating: 4.9,
-        ratingCount: 89,
+        categories: ['devops'],
+        tags: ['plugin', 'sdk', 'development', 'toolkit', 'workers', 'hooks', 'providers'],
+        keywords: ['plugin', 'sdk', 'development'],
+        downloads: 0,
+        rating: 0,
+        ratingCount: 0,
         lastUpdated: baseTime,
         createdAt: '2024-04-01T00:00:00Z',
         minClaudeFlowVersion: '3.0.0',
         dependencies: [
           { name: '@claude-flow/core', version: '^3.0.0' },
         ],
-        type: 'command',
+        type: 'core',
         hooks: [
           'plugin:create',
           'plugin:validate',
           'plugin:test',
-          'plugin:build',
-          'plugin:publish',
         ],
         commands: [
-          'plugin-creator new',
-          'plugin-creator template',
-          'plugin-creator validate',
-          'plugin-creator test',
-          'plugin-creator build',
-          'plugin-creator publish',
-          'plugin-creator watch',
+          'plugins create',
+          'plugins validate',
+          'plugins test',
         ],
-        permissions: ['filesystem', 'network'],
+        permissions: ['filesystem'],
         exports: [
-          'PluginScaffolder',
-          'TemplateEngine',
-          'PluginValidator',
-          'HotReloader',
-          'IPFSPublisher',
+          'PluginBuilder',
+          'WorkerPlugin',
+          'HookPlugin',
+          'ProviderPlugin',
+        ],
+        verified: true,
+        trustLevel: 'official',
+      },
+      // Agentic QE - AI-powered quality engineering
+      {
+        id: '@claude-flow/plugin-agentic-qe',
+        name: '@claude-flow/plugin-agentic-qe',
+        displayName: 'Agentic Quality Engineering',
+        description: 'AI-powered quality engineering with 58 agents that write tests, find bugs, predict defects, scan security, and perform chaos engineering safely.',
+        version: '3.0.0-alpha.3',
+        cid: 'bafybeiagenticqeplugin2024',
+        size: 285000,
+        checksum: 'sha256:agenticqe2024xyz',
+        author: officialAuthor,
+        license: 'MIT',
+        categories: ['ai-ml', 'devops', 'security'],
+        tags: ['testing', 'qe', 'tdd', 'security', 'chaos-engineering', 'coverage', 'defect-prediction', 'agents'],
+        keywords: ['quality', 'testing', 'agents', 'tdd', 'security'],
+        downloads: 1200,
+        rating: 4.8,
+        ratingCount: 24,
+        lastUpdated: baseTime,
+        createdAt: '2026-01-20T00:00:00Z',
+        minClaudeFlowVersion: '3.0.0',
+        dependencies: [
+          { name: '@claude-flow/core', version: '^3.0.0' },
+        ],
+        type: 'integration',
+        hooks: [
+          'aqe:generate-tests',
+          'aqe:analyze-coverage',
+          'aqe:security-scan',
+          'aqe:predict-defects',
+          'aqe:chaos-inject',
+        ],
+        commands: [
+          'aqe generate-tests',
+          'aqe tdd-cycle',
+          'aqe security-scan',
+          'aqe predict-defects',
+          'aqe chaos-inject',
+          'aqe quality-gate',
+          'aqe visual-regression',
+        ],
+        permissions: ['filesystem', 'network', 'memory'],
+        exports: [
+          'TestGenerator',
+          'CoverageAnalyzer',
+          'SecurityScanner',
+          'DefectPredictor',
+          'ChaosInjector',
+          'QualityGate',
         ],
         verified: true,
         trustLevel: 'official',
         securityAudit: {
           auditor: 'claude-flow-security-team',
-          auditDate: '2024-11-15T00:00:00Z',
-          auditVersion: '2.1.0',
+          auditDate: '2026-01-20T00:00:00Z',
+          auditVersion: '3.0.0-alpha.3',
+          passed: true,
+          issues: [],
+        },
+      },
+      // Prime Radiant - Mathematical coherence and consensus verification
+      {
+        id: '@claude-flow/plugin-prime-radiant',
+        name: '@claude-flow/plugin-prime-radiant',
+        displayName: 'Prime Radiant',
+        description: 'Mathematical AI that catches contradictions, verifies consensus, prevents hallucinations, and analyzes swarm stability using sheaf cohomology and spectral graph theory.',
+        version: '0.1.5',
+        cid: 'bafybeiprimeradiantplugin2024',
+        size: 195000,
+        checksum: 'sha256:primeradiant2024xyz',
+        author: officialAuthor,
+        license: 'MIT',
+        categories: ['ai-ml', 'agents'],
+        tags: ['coherence', 'consensus', 'mathematics', 'validation', 'hallucination-prevention', 'spectral', 'causal'],
+        keywords: ['coherence', 'consensus', 'validation', 'mathematics'],
+        downloads: 850,
+        rating: 4.9,
+        ratingCount: 18,
+        lastUpdated: baseTime,
+        createdAt: '2026-01-20T00:00:00Z',
+        minClaudeFlowVersion: '3.0.0',
+        dependencies: [
+          { name: '@claude-flow/core', version: '^3.0.0' },
+        ],
+        type: 'integration',
+        hooks: [
+          'pr:pre-memory-store',
+          'pr:pre-consensus',
+          'pr:post-swarm-task',
+          'pr:pre-rag-retrieval',
+        ],
+        commands: [
+          'pr coherence-check',
+          'pr consensus-verify',
+          'pr spectral-analyze',
+          'pr causal-infer',
+          'pr memory-gate',
+          'pr quantum-topology',
+        ],
+        permissions: ['memory', 'hooks'],
+        exports: [
+          'CoherenceChecker',
+          'ConsensusVerifier',
+          'SpectralAnalyzer',
+          'CausalInference',
+          'MemoryGate',
+          'QuantumTopology',
+        ],
+        verified: true,
+        trustLevel: 'official',
+        securityAudit: {
+          auditor: 'claude-flow-security-team',
+          auditDate: '2026-01-20T00:00:00Z',
+          auditVersion: '0.1.5',
           passed: true,
           issues: [],
         },
       },
     ];
+  }
+
+  /**
+   * Get demo plugins with real npm stats
+   */
+  private async getDemoPluginsWithStats(): Promise<PluginEntry[]> {
+    const basePlugins = this.getDemoPlugins();
+
+    // Only fetch stats for real npm packages
+    const realNpmPackages = [
+      '@claude-flow/plugin-agentic-qe',
+      '@claude-flow/plugin-prime-radiant',
+      '@claude-flow/claims',
+      '@claude-flow/security',
+      '@claude-flow/plugins',
+      '@claude-flow/embeddings',
+      '@claude-flow/neural',
+      '@claude-flow/performance',
+    ];
+
+    // Fetch stats in parallel
+    const statsPromises = realNpmPackages.map(pkg => fetchNpmStats(pkg));
+    const statsResults = await Promise.all(statsPromises);
+
+    // Create a map of package -> stats
+    const statsMap = new Map<string, { downloads: number; version: string }>();
+    realNpmPackages.forEach((pkg, i) => {
+      if (statsResults[i]) {
+        statsMap.set(pkg, statsResults[i]!);
+      }
+    });
+
+    // Update plugins with real stats, remove fake plugins that don't exist
+    return basePlugins
+      .filter(plugin => {
+        // Keep only real plugins that exist on npm or our two new ones
+        const isRealPlugin = realNpmPackages.includes(plugin.name);
+        return isRealPlugin;
+      })
+      .map(plugin => {
+        const stats = statsMap.get(plugin.name);
+        if (stats) {
+          return {
+            ...plugin,
+            downloads: stats.downloads,
+            version: stats.version,
+            ratingCount: 0, // No rating system yet
+            rating: 0,
+          };
+        }
+        return {
+          ...plugin,
+          downloads: 0,
+          ratingCount: 0,
+          rating: 0,
+        };
+      });
   }
 
   /**

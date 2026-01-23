@@ -1,25 +1,25 @@
 {
   "name": "@claude-flow/claims",
-  "version": "3.0.0-alpha.6",
+  "version": "3.0.0-alpha.8",
   "description": "Issue claiming and work coordination module for Claude Flow V3",
   "main": "dist/index.js",
-  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
+      "import": "./dist/index.js",
       "require": "./dist/index.js",
-      "types": "./dist/index.d.js"
+      "types": "./dist/index.d.ts"
     },
     "./api": {
-      "import": "./dist/api/index.mjs",
+      "import": "./dist/api/index.js",
       "require": "./dist/api/index.js",
-      "types": "./dist/api/index.d.js"
+      "types": "./dist/api/index.d.ts"
     },
     "./api/mcp-tools": {
-      "import": "./dist/api/mcp-tools.mjs",
+      "import": "./dist/api/mcp-tools.js",
       "require": "./dist/api/mcp-tools.js",
-      "types": "./dist/api/mcp-tools.d.js"
+      "types": "./dist/api/mcp-tools.d.ts"
     }
   },
   "files": [

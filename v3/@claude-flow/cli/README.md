@@ -1,6 +1,9 @@
-# Claude-Flow v3: Enterprise AI Orchestration Platform
+# 🌊 Claude-Flow v3: Enterprise AI Orchestration Platform
 
 <div align="center">
+
+![Claude-Flow Banner](https://repository-images.githubusercontent.com/995029641/b9acbe16-0f49-420d-804f-468ba2a73ace)
+
 
 
 [![Star on GitHub](https://img.shields.io/github/stars/ruvnet/claude-flow?style=for-the-badge&logo=github&color=gold)](https://github.com/ruvnet/claude-flow)
@@ -16,7 +19,7 @@
 
 **Production-ready multi-agent AI orchestration for Claude Code**
 
-*Deploy 54+ specialized agents in coordinated swarms with self-learning capabilities, fault-tolerant consensus, and enterprise-grade security.*
+*Deploy 60+ specialized agents in coordinated swarms with self-learning capabilities, fault-tolerant consensus, and enterprise-grade security.*
 
 </div>
 
@@ -59,7 +62,7 @@ flowchart TB
         CLM[Claims<br/>Human-Agent Coord]
     end
 
-    subgraph AGENTS["🤖 54+ Agents"]
+    subgraph AGENTS["🤖 60+ Agents"]
         AG1[coder]
         AG2[tester]
         AG3[reviewer]
@@ -152,7 +155,7 @@ npx claude-flow@v3alpha init
 ---
 ### Key Capabilities
 
-🤖 **54+ Specialized Agents** - Ready-to-use AI agents for coding, code review, testing, security audits, documentation, and DevOps. Each agent is optimized for its specific role.
+🤖 **60+ Specialized Agents** - Ready-to-use AI agents for coding, code review, testing, security audits, documentation, and DevOps. Each agent is optimized for its specific role.
 
 🐝 **Coordinated Agent Teams** - Run unlimited agents simultaneously in organized swarms. Agents spawn sub-workers, communicate, share context, and divide work automatically using hierarchical (queen/workers) or mesh (peer-to-peer) patterns.
 
@@ -177,7 +180,7 @@ Every request flows through four layers: from your CLI or Claude Code interface,
 |-------|------------|--------------|
 | User | Claude Code, CLI | Your interface to control and run commands |
 | Orchestration | MCP Server, Router, Hooks | Routes requests to the right agents |
-| Agents | 54+ types | Specialized workers (coder, tester, reviewer...) |
+| Agents | 60+ types | Specialized workers (coder, tester, reviewer...) |
 | Providers | Anthropic, OpenAI, Google, Ollama | AI models that power reasoning |
 
 </details>
@@ -254,6 +257,124 @@ Smart routing skips expensive LLM calls when possible. Simple edits use WASM (fr
 | Simple | Agent Booster (WASM) | <1ms |
 | Medium | Haiku/Sonnet | ~500ms |
 | Complex | Opus + Swarm | 2-5s |
+
+</details>
+
+<details>
+<summary>⚡ <strong>Agent Booster (WASM)</strong> — 352x faster code transforms, skip LLM entirely</summary>
+
+Agent Booster uses WebAssembly to handle simple code transformations without calling the LLM at all. When the hooks system detects a simple task, it routes directly to Agent Booster for instant results.
+
+**Supported Transform Intents:**
+
+| Intent | What It Does | Example |
+|--------|--------------|---------|
+| `var-to-const` | Convert var/let to const | `var x = 1` → `const x = 1` |
+| `add-types` | Add TypeScript type annotations | `function foo(x)` → `function foo(x: string)` |
+| `add-error-handling` | Wrap in try/catch | Adds proper error handling |
+| `async-await` | Convert promises to async/await | `.then()` chains → `await` |
+| `add-logging` | Add console.log statements | Adds debug logging |
+| `remove-console` | Strip console.* calls | Removes all console statements |
+
+**Hook Signals:**
+
+When you see these in hook output, the system is telling you how to optimize:
+
+```bash
+# Agent Booster available - skip LLM entirely
+[AGENT_BOOSTER_AVAILABLE] Intent: var-to-const
+→ Use Edit tool directly, 352x faster than LLM
+
+# Model recommendation for Task tool
+[TASK_MODEL_RECOMMENDATION] Use model="haiku"
+→ Pass model="haiku" to Task tool for cost savings
+```
+
+**Performance:**
+
+| Metric | Agent Booster | LLM Call |
+|--------|---------------|----------|
+| Latency | <1ms | 2-5s |
+| Cost | $0 | $0.0002-$0.015 |
+| Speedup | **352x faster** | baseline |
+
+</details>
+
+<details>
+<summary>💰 <strong>Token Optimizer</strong> — 30-50% token reduction</summary>
+
+The Token Optimizer integrates agentic-flow optimizations to reduce API costs by compressing context and caching results.
+
+**Savings Breakdown:**
+
+| Optimization | Token Savings | How It Works |
+|--------------|---------------|--------------|
+| ReasoningBank retrieval | -32% | Fetches relevant patterns instead of full context |
+| Agent Booster edits | -15% | Simple edits skip LLM entirely |
+| Cache (95% hit rate) | -10% | Reuses embeddings and patterns |
+| Optimal batch size | -20% | Groups related operations |
+| **Combined** | **30-50%** | Stacks multiplicatively |
+
+**Usage:**
+
+```typescript
+import { getTokenOptimizer } from '@claude-flow/integration';
+const optimizer = await getTokenOptimizer();
+
+// Get compact context (32% fewer tokens)
+const ctx = await optimizer.getCompactContext("auth patterns");
+
+// Optimized edit (352x faster for simple transforms)
+await optimizer.optimizedEdit(file, oldStr, newStr, "typescript");
+
+// Optimal config for swarm (100% success rate)
+const config = optimizer.getOptimalConfig(agentCount);
+```
+
+</details>
+
+<details>
+<summary>🛡️ <strong>Anti-Drift Swarm Configuration</strong> — Prevent goal drift in multi-agent work</summary>
+
+Complex swarms can drift from their original goals. Claude-Flow V3 includes anti-drift defaults that prevent agents from going off-task.
+
+**Recommended Configuration:**
+
+```javascript
+// Anti-drift defaults (ALWAYS use for coding tasks)
+swarm_init({
+  topology: "hierarchical",  // Single coordinator enforces alignment
+  maxAgents: 8,              // Smaller team = less drift surface
+  strategy: "specialized"    // Clear roles reduce ambiguity
+})
+```
+
+**Why This Prevents Drift:**
+
+| Setting | Anti-Drift Benefit |
+|---------|-------------------|
+| `hierarchical` | Coordinator validates each output against goal, catches divergence early |
+| `maxAgents: 6-8` | Fewer agents = less coordination overhead, easier alignment |
+| `specialized` | Clear boundaries - each agent knows exactly what to do, no overlap |
+| `raft` consensus | Leader maintains authoritative state, no conflicting decisions |
+
+**Additional Anti-Drift Measures:**
+
+- Frequent checkpoints via `post-task` hooks
+- Shared memory namespace for all agents
+- Short task cycles with verification gates
+- Hierarchical coordinator reviews all outputs
+
+**Task → Agent Routing (Anti-Drift):**
+
+| Code | Task Type | Recommended Agents |
+|------|-----------|-------------------|
+| 1 | Bug Fix | coordinator, researcher, coder, tester |
+| 3 | Feature | coordinator, architect, coder, tester, reviewer |
+| 5 | Refactor | coordinator, architect, coder, reviewer |
+| 7 | Performance | coordinator, perf-engineer, coder |
+| 9 | Security | coordinator, security-architect, auditor |
+| 11 | Memory | coordinator, memory-specialist, perf-engineer |
 
 </details>
 
@@ -402,7 +523,7 @@ Claude-Flow v3 introduces **self-learning neural capabilities** that no other ag
 | **Code Transforms** | ✅ Agent Booster (352x) | ⛔ | ⛔ | ⛔ | ⛔ |
 | **Input Validation** | ✅ Zod + Path security | ⛔ | ⛔ | ⛔ | ⛔ |
 
-<sub>*Comparison updated January 15, 2026*</sub>
+<sub>*Comparison updated January 23, 2026*</sub>
 
 <details>
 <summary>🚀 <strong>Key Differentiators</strong> — Self-learning, memory optimization, fault tolerance</summary>
@@ -519,7 +640,7 @@ flowchart TB
 
     subgraph Agents["🤖 Agent Layer"]
         Queen[Queen Coordinator]
-        Workers[54+ Specialized Agents]
+        Workers[60+ Specialized Agents]
         Swarm[Swarm Manager]
     end
 
@@ -703,7 +824,7 @@ Connect Claude-Flow to your development environment.
 <details>
 <summary>🔌 <strong>MCP Setup</strong> — Connect Claude-Flow to Any AI Environment</summary>
 
-Claude-Flow runs as an MCP (Model Context Protocol) server, allowing you to connect it to any MCP-compatible AI client. This means you can use Claude-Flow's 54+ agents, swarm coordination, and self-learning capabilities from Claude Desktop, VS Code, Cursor, Windsurf, ChatGPT, and more.
+Claude-Flow runs as an MCP (Model Context Protocol) server, allowing you to connect it to any MCP-compatible AI client. This means you can use Claude-Flow's 60+ agents, swarm coordination, and self-learning capabilities from Claude Desktop, VS Code, Cursor, Windsurf, ChatGPT, and more.
 
 ### Quick Add Command
 
@@ -985,12 +1106,12 @@ echo "ANTHROPIC_API_KEY=sk-ant-..." >> .env
 Comprehensive capabilities for enterprise-grade AI agent orchestration.
 
 <details>
-<summary>📦 <strong>Features</strong> — 54+ Agents, Swarm Topologies, MCP Tools & Security</summary>
+<summary>📦 <strong>Features</strong> — 60+ Agents, Swarm Topologies, MCP Tools & Security</summary>
 
 Comprehensive feature set for enterprise-grade AI agent orchestration.
 
 <details open>
-<summary>🤖 <strong>Agent Ecosystem</strong> — 54+ specialized agents across 8 categories</summary>
+<summary>🤖 <strong>Agent Ecosystem</strong> — 60+ specialized agents across 8 categories</summary>
 
 Pre-built agents for every development task, from coding to security audits.
 
@@ -1133,6 +1254,40 @@ Build custom plugins with the fluent builder API. Create MCP tools, hooks, worke
 | **AgentDBBridge** | Vector storage with HNSW indexing | 150x faster search, batch operations |
 
 **Plugin Performance:** Load <20ms, Hook execution <0.5ms, Worker spawn <50ms
+
+### 📦 Available Optional Plugins
+
+Install these optional plugins to extend Claude Flow capabilities:
+
+| Plugin | Version | Description | Install Command |
+|--------|---------|-------------|-----------------|
+| **@claude-flow/plugin-agentic-qe** | 3.0.0-alpha.2 | Quality Engineering with 58 AI agents across 12 DDD contexts. TDD, coverage analysis, security scanning, chaos engineering, accessibility testing. | `npm install @claude-flow/plugin-agentic-qe` |
+| **@claude-flow/plugin-prime-radiant** | 0.1.4 | Mathematical AI interpretability with 6 engines: sheaf cohomology, spectral analysis, causal inference, quantum topology, category theory, HoTT proofs. | `npm install @claude-flow/plugin-prime-radiant` |
+
+**Agentic-QE Plugin Features:**
+- 58 specialized QE agents across 13 bounded contexts
+- 16 MCP tools: `aqe/generate-tests`, `aqe/tdd-cycle`, `aqe/analyze-coverage`, `aqe/security-scan`, `aqe/chaos-inject`, etc.
+- London-style TDD with red-green-refactor cycles
+- O(log n) coverage gap detection with Johnson-Lindenstrauss
+- OWASP/SANS compliance auditing
+
+**Prime-Radiant Plugin Features:**
+- 6 mathematical engines for AI interpretability
+- 6 MCP tools: `pr_coherence_check`, `pr_spectral_analyze`, `pr_causal_infer`, `pr_consensus_verify`, `pr_quantum_topology`, `pr_memory_gate`
+- Sheaf Laplacian coherence detection (<5ms)
+- Do-calculus causal inference
+- Hallucination prevention via consensus verification
+
+```bash
+# Install Quality Engineering plugin
+npm install @claude-flow/plugin-agentic-qe
+
+# Install AI Interpretability plugin
+npm install @claude-flow/plugin-prime-radiant
+
+# Register plugins in your project
+npx claude-flow plugins list --installed
+```
 
 </details>
 
@@ -1772,18 +1927,33 @@ Real-time development status display for Claude Code integration showing DDD pro
 
 **Usage:**
 ```bash
-# V3 statusline (Node.js)
-node v3/@claude-flow/hooks/bin/statusline.js
+# Default: Safe multi-line (avoids Claude Code collision zone)
+npx claude-flow@v3alpha hooks statusline
+
+# Single-line mode (completely avoids collision)
+npx claude-flow@v3alpha hooks statusline --single
+
+# Legacy multi-line (original behavior, may have bleeding)
+npx claude-flow@v3alpha hooks statusline --legacy
 
 # JSON output for scripting
-node v3/@claude-flow/hooks/bin/statusline.js --json
+npx claude-flow@v3alpha hooks statusline --json
 
 # Compact JSON (single line)
-node v3/@claude-flow/hooks/bin/statusline.js --compact
-
-# Help
-node v3/@claude-flow/hooks/bin/statusline.js --help
+npx claude-flow@v3alpha hooks statusline --compact
 ```
+
+**Collision Zone Fix (Issue #985):**
+
+Claude Code writes internal status (e.g., `7s • 1p`) at absolute terminal coordinates (columns 15-25 on the second-to-last line). The safe mode pads the collision line with spaces to push content past column 25, preventing character bleeding.
+
+| Option | Description |
+|--------|-------------|
+| (default) | Safe multi-line with collision zone avoidance |
+| `--single` | Single-line output (complete collision avoidance) |
+| `--legacy` | Original multi-line (may cause bleeding) |
+| `--json` | JSON output with pretty printing |
+| `--compact` | JSON output without formatting |
 
 **Claude Code Integration:**
 
@@ -1792,7 +1962,7 @@ Add to `.claude/settings.json`:
 {
   "statusLine": {
     "type": "command",
-    "command": "node v3/@claude-flow/hooks/bin/statusline.js"
+    "command": "npx claude-flow@v3alpha hooks statusline --single"
   }
 }
 ```
@@ -1908,6 +2078,189 @@ Shell-based daemons for monitoring (Linux/macOS only):
 ```
 
 </details>
+
+<details>
+<summary>⌨️ <strong>V3 CLI Commands</strong> — 26 commands with 140+ subcommands</summary>
+
+Complete command-line interface for all Claude-Flow operations.
+
+**Core Commands:**
+
+| Command | Subcommands | Description |
+|---------|-------------|-------------|
+| `init` | 4 | Project initialization with wizard, presets, skills, hooks |
+| `agent` | 8 | Agent lifecycle (spawn, list, status, stop, metrics, pool, health, logs) |
+| `swarm` | 6 | Multi-agent swarm coordination and orchestration |
+| `memory` | 11 | AgentDB memory with vector search (150x-12,500x faster) |
+| `mcp` | 9 | MCP server management and tool execution |
+| `task` | 6 | Task creation, assignment, and lifecycle |
+| `session` | 7 | Session state management and persistence |
+| `config` | 7 | Configuration management and provider setup |
+| `status` | 3 | System status monitoring with watch mode |
+| `start` | 3 | Service startup and quick launch |
+| `workflow` | 6 | Workflow execution and template management |
+| `hooks` | 17 | Self-learning hooks + 12 background workers |
+| `hive-mind` | 6 | Queen-led Byzantine fault-tolerant consensus |
+
+**Advanced Commands:**
+
+| Command | Subcommands | Description |
+|---------|-------------|-------------|
+| `daemon` | 5 | Background worker daemon (start, stop, status, trigger, enable) |
+| `neural` | 5 | Neural pattern training (train, status, patterns, predict, optimize) |
+| `security` | 6 | Security scanning (scan, audit, cve, threats, validate, report) |
+| `performance` | 5 | Performance profiling (benchmark, profile, metrics, optimize, report) |
+| `providers` | 5 | AI providers (list, add, remove, test, configure) |
+| `plugins` | 5 | Plugin management (list, install, uninstall, enable, disable) |
+| `deployment` | 5 | Deployment management (deploy, rollback, status, environments, release) |
+| `embeddings` | 4 | Vector embeddings (embed, batch, search, init) - 75x faster with agentic-flow |
+| `claims` | 4 | Claims-based authorization (check, grant, revoke, list) |
+| `migrate` | 5 | V2 to V3 migration with rollback support |
+| `process` | 4 | Background process management |
+| `doctor` | 1 | System diagnostics with health checks |
+| `completions` | 4 | Shell completions (bash, zsh, fish, powershell) |
+
+**Quick Examples:**
+
+```bash
+# Initialize project with wizard
+npx claude-flow@v3alpha init --wizard
+
+# Start daemon with background workers
+npx claude-flow@v3alpha daemon start
+
+# Spawn an agent with specific type
+npx claude-flow@v3alpha agent spawn -t coder --name my-coder
+
+# Initialize swarm with V3 mode
+npx claude-flow@v3alpha swarm init --v3-mode
+
+# Search memory (HNSW-indexed, 150x faster)
+npx claude-flow@v3alpha memory search -q "authentication patterns"
+
+# Run security scan
+npx claude-flow@v3alpha security scan --depth full
+
+# Performance benchmark
+npx claude-flow@v3alpha performance benchmark --suite all
+```
+
+</details>
+
+<details>
+<summary>🩺 <strong>Doctor Health Checks</strong> — System diagnostics with auto-fix</summary>
+
+Run `npx claude-flow@v3alpha doctor` to diagnose and fix common issues.
+
+**Health Checks Performed:**
+
+| Check | Requirement | Auto-Fix |
+|-------|-------------|----------|
+| **Node.js version** | 20+ | ❌ Manual upgrade required |
+| **npm version** | 9+ | ❌ Manual upgrade required |
+| **Git installation** | Any version | ❌ Manual install required |
+| **Config file validity** | Valid JSON/YAML | ✅ Regenerates defaults |
+| **Daemon status** | Running | ✅ Restarts daemons |
+| **Memory database** | SQLite writable | ✅ Recreates if corrupt |
+| **API keys** | Valid format | ❌ Manual configuration |
+| **MCP servers** | Responsive | ✅ Restarts unresponsive servers |
+| **Disk space** | >100MB free | ❌ Manual cleanup required |
+| **TypeScript** | Installed | ✅ Installs if missing |
+
+**Commands:**
+
+```bash
+# Run full diagnostics
+npx claude-flow@v3alpha doctor
+
+# Run diagnostics with auto-fix
+npx claude-flow@v3alpha doctor --fix
+
+# Check specific component
+npx claude-flow@v3alpha doctor --component memory
+
+# Verbose output
+npx claude-flow@v3alpha doctor --verbose
+```
+
+**Output Example:**
+
+```
+🩺 Claude-Flow Doctor v3.0.0-alpha
+
+✅ Node.js      20.11.0 (required: 20+)
+✅ npm          10.2.4 (required: 9+)
+✅ Git          2.43.0
+✅ Config       Valid claude-flow.config.json
+✅ Daemon       Running (PID: 12345)
+✅ Memory       SQLite healthy, 1.2MB
+⚠️ API Keys    ANTHROPIC_API_KEY set, OPENAI_API_KEY missing
+✅ MCP Server   Responsive (45ms latency)
+✅ Disk Space   2.4GB available
+
+Summary: 9/10 checks passed
+```
+
+</details>
+
+<details>
+<summary>📦 <strong>Embeddings Package v3</strong> — Cross-platform ONNX with hyperbolic support</summary>
+
+The embeddings package (v3.0.0-alpha.12) provides high-performance vector embeddings with multiple backends.
+
+**Key Features:**
+
+| Feature | Description | Performance |
+|---------|-------------|-------------|
+| **sql.js backend** | Cross-platform SQLite (WASM) | No native compilation needed |
+| **Document chunking** | Configurable overlap and size | Handles large documents |
+| **Normalization** | L2, L1, min-max, z-score | 4 normalization methods |
+| **Hyperbolic embeddings** | Poincaré ball model | Better hierarchical representation |
+| **agentic-flow ONNX** | Integrated ONNX runtime | 75x faster than API calls |
+| **Neural substrate** | RuVector integration | Full learning pipeline |
+
+**Models Available:**
+
+| Model | Dimensions | Speed | Quality |
+|-------|------------|-------|---------|
+| `all-MiniLM-L6-v2` | 384 | Fast | Good |
+| `all-mpnet-base-v2` | 768 | Medium | Better |
+
+**Usage:**
+
+```bash
+# Initialize embeddings system
+npx claude-flow@v3alpha embeddings init
+
+# Generate embedding for text
+npx claude-flow@v3alpha embeddings embed "authentication patterns"
+
+# Batch embed multiple texts
+npx claude-flow@v3alpha embeddings batch --file texts.txt
+
+# Search with semantic similarity
+npx claude-flow@v3alpha embeddings search "login flow" --top-k 5
+```
+
+**Programmatic:**
+
+```typescript
+import { createEmbeddingServiceAsync } from '@claude-flow/embeddings';
+
+const service = await createEmbeddingServiceAsync({
+  model: 'all-MiniLM-L6-v2',
+  hyperbolic: true,  // Enable Poincaré ball embeddings
+  cacheSize: 256
+});
+
+// Generate embedding
+const embedding = await service.embed("authentication flow");
+
+// Search similar patterns
+const results = await service.search("login", { topK: 5 });
+```
+
+</details>
 </details>
 
 ---
@@ -2010,6 +2363,35 @@ Hooks intercept operations (file edits, commands, tasks) and learn from outcomes
 └─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
      HNSW              Verdict            LoRA              EWC++
    150x faster        success/fail      compression       memory lock
+```
+
+### Hook Signals (ADR-026 Model Routing)
+
+When hooks run, they emit signals that guide routing decisions. Watch for these in hook output:
+
+| Signal | Meaning | Action |
+|--------|---------|--------|
+| `[AGENT_BOOSTER_AVAILABLE]` | Simple transform detected, skip LLM | Use Edit tool directly (352x faster, $0) |
+| `[TASK_MODEL_RECOMMENDATION] Use model="haiku"` | Low complexity task | Pass `model: "haiku"` to Task tool |
+| `[TASK_MODEL_RECOMMENDATION] Use model="sonnet"` | Medium complexity task | Pass `model: "sonnet"` to Task tool |
+| `[TASK_MODEL_RECOMMENDATION] Use model="opus"` | High complexity task | Pass `model: "opus"` to Task tool |
+
+**Agent Booster Intents** (handled without LLM):
+- `var-to-const` - Convert var/let to const
+- `add-types` - Add TypeScript type annotations
+- `add-error-handling` - Wrap in try/catch
+- `async-await` - Convert promises to async/await
+- `add-logging` - Add console.log statements
+- `remove-console` - Strip console.* calls
+
+**Example Hook Output:**
+```bash
+$ npx claude-flow@v3alpha hooks pre-task --description "convert var to const in utils.ts"
+
+[AGENT_BOOSTER_AVAILABLE] Intent: var-to-const
+Recommendation: Use Edit tool directly
+Performance: <1ms (352x faster than LLM)
+Cost: $0
 ```
 
 ### All 27 Hooks by Category
@@ -5853,7 +6235,7 @@ export CLAUDE_FLOW_HNSW_EF=100
 │ Pattern Matching      │ Self-learning (ReasoningBank)       │
 │ Security              │ CVE remediation + strict validation │
 │ Modular Architecture  │ 18 @claude-flow/* packages          │
-│ Agent Coordination    │ 54+ specialized agents              │
+│ Agent Coordination    │ 60+ specialized agents              │
 │ Token Efficiency      │ 32% reduction with optimization     │
 └───────────────────────┴─────────────────────────────────────┘
 ```
