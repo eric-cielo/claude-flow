@@ -981,3 +981,43 @@ const result = await initializer.initialize({
 ```
 
 This completes the template specifications for the Codex integration.
+
+## CLI Commands
+
+The `@claude-flow/codex` package provides the following commands:
+
+```bash
+# Initialize a new Codex project
+npx @claude-flow/codex init
+
+# Initialize with specific template
+npx @claude-flow/codex init --template minimal
+
+# Generate a new skill
+npx @claude-flow/codex generate-skill --name custom-skill
+
+# Migrate from Claude Code to Codex
+npx @claude-flow/codex migrate --from claude.md
+
+# Validate AGENTS.md and skills
+npx @claude-flow/codex validate
+
+# Generate dual-platform setup (Claude Code + Codex)
+npx @claude-flow/codex init --dual
+```
+
+## Integration with @claude-flow/cli
+
+When using the main CLI, Codex support is available via:
+
+```bash
+# Initialize with Codex support
+npx claude-flow@v3alpha init --codex
+
+# Initialize with dual-platform support
+npx claude-flow@v3alpha init --dual
+
+# Future (after coflow rebrand)
+npx coflow init --codex
+npx coflow init --dual
+```
