@@ -12,6 +12,7 @@
 
 - **150x-12,500x Faster Search** - HNSW (Hierarchical Navigable Small World) vector index for ultra-fast similarity search
 - **Hybrid Backend** - SQLite for structured data + AgentDB for vectors (ADR-009)
+- **Auto Memory Bridge** - Bidirectional sync between Claude Code auto memory and AgentDB (ADR-048)
 - **Vector Quantization** - Binary, scalar, and product quantization for 4-32x memory reduction
 - **Multiple Distance Metrics** - Cosine, Euclidean, dot product, and Manhattan distance
 - **Query Builder** - Fluent API for building complex memory queries
