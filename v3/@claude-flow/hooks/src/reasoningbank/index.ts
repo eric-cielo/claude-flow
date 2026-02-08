@@ -1024,3 +1024,67 @@ class FallbackEmbeddingService implements IEmbeddingService {
 
 // Export singleton instance
 export const reasoningBank = new ReasoningBank();
+
+// ===== ADR-049: Session Lifecycle Bridge =====
+
+/**
+ * Hook handler: session-start → import auto memory, build graph.
+ * Called by the session-start hook to hydrate AgentDB with previous learnings.
+ *
+ * @param bridge - An initialized AutoMemoryBridge instance
+ */
+export async function onSessionStart(bridge: {
+  importFromAutoMemory(): Promise<unknown>;
+}): Promise<void> {
+  await bridge.importFromAutoMemory();
+}
+
+/**
+ * Hook handler: session-end → consolidate learnings, sync, curate.
+ * Called by the session-end hook to persist session discoveries.
+ *
+ * @param bridge - An initialized AutoMemoryBridge instance
+ */
+export async function onSessionEnd(bridge: {
+  syncToAutoMemory(): Promise<unknown>;
+  curateIndex(): Promise<void>;
+}): Promise<void> {
+  await bridge.syncToAutoMemory();
+  await bridge.curateIndex();
+}
+
+/**
+ * Hook handler: post-task → record task learnings as insights.
+ * Called by the post-task hook when a task completes successfully.
+ *
+ * @param bridge - An initialized AutoMemoryBridge instance
+ * @param result - Task result with optional learnings array
+ */
+export async function onPostTask(
+  bridge: {
+    recordInsight(insight: {
+      category: string;
+      summary: string;
+      detail?: string;
+      source: string;
+      confidence: number;
+    }): Promise<void>;
+  },
+  result: {
+    success: boolean;
+    learnings?: Array<{ summary: string; detail?: string; confidence?: number }>;
+    taskId?: string;
+  },
+): Promise<void> {
+  if (!result.success || !result.learnings?.length) return;
+
+  for (const learning of result.learnings) {
+    await bridge.recordInsight({
+      category: 'project-patterns',
+      summary: learning.summary,
+      detail: learning.detail,
+      source: `task:${result.taskId || 'unknown'}`,
+      confidence: learning.confidence ?? 0.7,
+    });
+  }
+}
