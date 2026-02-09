@@ -127,10 +127,16 @@ function computePageRank(nodes, edges, damping, maxIter) {
   const ranks = {};
   for (const id of ids) ranks[id] = 1 / n;
 
-  // Power iteration
+  // Power iteration (with dangling node redistribution)
   for (let iter = 0; iter < maxIter; iter++) {
     const newRanks = {};
     let diff = 0;
+
+    // Collect rank from dangling nodes (no outgoing edges)
+    let danglingSum = 0;
+    for (const id of ids) {
+      if (outLinks[id].length === 0) danglingSum += ranks[id];
+    }
 
     for (const id of ids) {
       let sum = 0;
@@ -138,7 +144,8 @@ function computePageRank(nodes, edges, damping, maxIter) {
         const outCount = outLinks[src].length;
         if (outCount > 0) sum += ranks[src] / outCount;
       }
-      newRanks[id] = (1 - damping) / n + damping * sum;
+      // Dangling rank distributed evenly + teleport
+      newRanks[id] = (1 - damping) / n + damping * (sum + danglingSum / n);
       diff += Math.abs(newRanks[id] - ranks[id]);
     }
 
