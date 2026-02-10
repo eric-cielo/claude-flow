@@ -382,6 +382,56 @@ function createHashEmbedding(text, dimensions = 768) {
 - Stores transcript chunks as JSON
 - No indexed queries, linear scan for retrieval
 
+## Auto-Optimization Pipeline
+
+When `CLAUDE_FLOW_AUTO_OPTIMIZE` is not `false` (default: enabled), the system
+automatically optimizes storage and retrieval:
+
+### 1. Importance Scoring
+
+Entries are ranked by a composite importance score:
+
+```
+importance = recency × frequency × richness
+
+recency   = exp(-0.693 × ageDays / 7)     # Exponential decay, 7-day half-life
+frequency = log2(accessCount + 1) + 1      # Log-scaled access count
+richness  = 1.0 + toolBoost + fileBoost    # +0.5 for tools, +0.3 for files
+```
+
+This means entries with tool calls, file edits, and frequent retrieval are
+prioritized over plain conversational turns.
+
+### 2. Access Tracking
+
+When entries are restored after compaction, their `access_count` is incremented
+and `last_accessed_at` is updated. This creates a feedback loop:
+
+```
+Archive → Restore → Track Access → Next Restore Uses Access Data
+```
+
+Entries that are repeatedly useful get higher importance scores automatically.
+
+### 3. Auto-Retention
+
+On every PreCompact, stale entries are pruned:
+- **Criteria**: `access_count = 0` AND `created_at < now - RETENTION_DAYS`
+- **Default retention**: 30 days (configurable via `CLAUDE_FLOW_RETENTION_DAYS`)
+- **Never prunes accessed entries**: If it was ever restored, it's kept
+
+### 4. Auto-Sync to RuVector
+
+When SQLite is the primary backend but RuVector PostgreSQL env vars are configured:
+- All entries are synced to RuVector with hash embeddings attached
+- RuVector's `pgvector` extension enables true semantic search
+- ON CONFLICT DO NOTHING prevents duplicate inserts
+- Sync is best-effort — failures don't block the archive pipeline
+
+This enables a zero-config upgrade path: just set `RUVECTOR_HOST` and your
+local SQLite archive is automatically replicated to PostgreSQL with vector
+search capabilities.
+
 ## Consequences
 
 ### Positive
@@ -397,11 +447,14 @@ function createHashEmbedding(text, dimensions = 768) {
 5. **Non-invasive**: Uses official SDK hooks -- no patches, no internal API dependencies
 6. **Composable**: Transcript entries are searchable alongside patterns,
    learnings, and other memory types
+7. **Self-optimizing**: Importance scoring, access tracking, and auto-pruning ensure
+   retrieval quality improves over time without manual tuning
+8. **Auto-sync**: SQLite → RuVector migration happens automatically when configured
 
 ### Negative
 
-1. **Storage growth**: Long sessions produce many chunks. Mitigation: configurable
-   retention policy, namespace-level cleanup
+1. **Storage growth**: Long sessions produce many chunks. Mitigation: auto-retention
+   prunes never-accessed entries after configurable retention period
 2. **Summary quality**: Extractive summarization is fast but imprecise. Mitigation:
    full content is stored; summaries are just for the restoration preview
 3. **RuVector network latency**: PostgreSQL adds ~100ms per archive operation.
@@ -415,16 +468,16 @@ function createHashEmbedding(text, dimensions = 768) {
 
 ## Future Enhancements
 
-1. **Semantic restoration**: Use real embeddings + the user's first post-compaction
-   message to query the most RELEVANT archived chunks (not just most recent)
-2. **Compaction summary capture**: After compaction, store Claude's own summary as a
+1. **Compaction summary capture**: After compaction, store Claude's own summary as a
    high-confidence semantic entry alongside our chunk-level detail
-3. **Retention policies**: Auto-expire old transcript archives, keep only chunks that
-   were accessed (indicating relevance)
-4. **Cross-session search MCP tool**: Expose `transcript-archive` search as an MCP
+2. **Cross-session search MCP tool**: Expose `transcript-archive` search as an MCP
    tool so Claude can explicitly query past conversations
-5. **MemoryGraph integration**: Add reference edges between sequential chunks for
+3. **MemoryGraph integration**: Add reference edges between sequential chunks for
    PageRank-aware retrieval (ADR-049)
+4. **Real ONNX embeddings**: Replace hash embeddings with ONNX-based embeddings for
+   true semantic similarity search (transparent upgrade)
+5. **Adaptive retention**: Dynamically adjust retention period based on storage usage
+   and access patterns
 
 ## References
 
